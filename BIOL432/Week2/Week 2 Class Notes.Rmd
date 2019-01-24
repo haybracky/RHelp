@@ -1,0 +1,592 @@
+---
+title: "Week 2"
+output: html_notebook
+---
+
+#Preamble
+
+This notebook contains week 2 notes for BIOL432. The lecture includes dplyr and regular expressions. 
+
+#Data science -> making a science out of working with data
+
+Often using big data
+
+Characteristics of big data (the 4 V's)
+
+  * High volume
+    - req's standardized approach
+  * Variety
+    - diff types of data
+  * Velocity
+    - rapid accumulation of data
+  * Compromise verasity
+    - variability in quantity of data -> need a way to distinguish & select based on quality
+    
+=> Data science is the circle of life:
+
+  Hypoth -> Data collection -> Quality control -> Explore data -> Model -> Report -> etc.
+  
+dplyr -> good for working with 2D data
+
+```{r}
+Fallo<- read.csv("FallopiaData.csv")
+str(Fallo)
+```
+^ 2D dataset (i.e. rows & col), each cell contains single value, each var has own col, each row is observation
+
+```{r subset data}
+# install.packages("dplyr")
+library(dplyr)
+# filter()
+Pot10<- filter(Fallo,PotNum==10) # searches dataframe Fallo for all cases where PotNum is 10
+PotL10<-filter(Fallo,PotNum<10)
+PotL10
+
+names(Fallo)[13]<- "Fallopia"
+head(Fallo)
+
+rename(Fallo, Total_Biomass = Total)
+names(Fallo)
+
+X<- arrange(Fallo, Taxon, Total) # arranges in ascending order
+head(X)
+
+X<- arrange(Fallo, Taxon, desc(Total)) # arranges in descending order
+head(X)
+
+X<- select(Fallo, PotNum, Scenario, Nutrients, Taxon, Total)
+head(X)
+
+X<- select(Fallo, PotNum:Taxon, Total)
+head(X) # quick way to shrink data into variables you're interested in
+
+X<- select(Fallo, -Total)
+head(X) # removes Total from the dataset
+
+# modify this to exclude PotNum:Taxon, Total
+X<- select(Fallo, -c(PotNum:Taxon, Total))
+head(X)
+
+Fallo$Total_g<- Fallo$Total/1000
+head(Fallo)
+select(Fallo, Total_g, Taxon, Scenario, Nutrients, PotNum, everything()) # rearranges the data as written, with everything() meaning leaves what's left as is
+
+X<- mutate(Fallo, Urtica_g = Urtica/1000) # makes new col but using dplyr package
+head(X)
+
+X<- transmute(Fallo, Urtica_g = Urtica/1000) # this transforms Urtica & gets rid of everything else
+
+# for summaries...
+
+TrtGrp<- group_by(Fallo,Taxon,Scenario,Nutrients) # makes a tibble... diff than dataframe -> object that dplyr uses to group dataframe
+summarize(TrtGrp, Mean=mean(Total), SD=sd(Total), Count=length(Total))
+
+```
+If you want to do this a bunch of times, make a pipe
+
+```{r pipe}
+X<- group_by(Fallo, Taxon)
+X<- group_by(X, Scenario)
+X<- group_by(X, Nutrients)
+X<- summarize(X, Mean=mean(Total), SD=sd(Total))
+arrange(X, desc(Mean))
+# sorted mean high to low, but only have 2 means... vs group_by() above has several
+# if we make a mistake in this, it's carried on b/c using same object name
+# also true if for loop makes a mistake, it's carried on throughout the loop
+# doing 3 group_by statements in a row essentially just groups by the last one
+
+# better to do this:
+X<- group_by(Fallo, Taxon)
+X1<- group_by(X, Scenario)
+X2<- group_by(X1, Nutrients)
+X3<- summarize(X2, Mean=mean(Total), SD=sd(Total))
+arrange(X3, desc(Mean))
+
+Y<- group_by(Fallo, Nutrients)
+summarize(Y, Mean=mean(Total), SD=sd(Total))
+
+#pipe
+
+# unweighted mean of nutrients
+FalSum<- Fallo%>%
+  group_by(Taxon)%>%
+  group_by(Scenario)%>%
+  group_by(Nutrients)%>%
+  summarize(Mean=mean(Total), SD=sd(Total))%>% # don't need to declare data this time b/c taking output as the next input
+  arrange(desc(Mean))
+# better b/c not making intermittent objects, less error prone
+
+# weighted mean of nutrients
+Fallo %>%
+  group_by(Taxon, Scenario, Nutrients) %>%
+  summarize(Mean=mean(Total)) %>%
+  group_by(Scenario,Nutrients) %>%
+  summarize(Mean=mean(Mean)) %>% # this will be a mean of means... which isn't always the same as a regular mean, it's a weighted mean (good when diff sample sizes or unbalanced samples)
+  group_by(Nutrients) %>%
+  summarize(Mean=mean(Mean)) %>%
+  arrange(desc(Mean))
+
+Fallo %>%
+  group_by(Nutrients) %>%
+  summarize(Mean=mean(Total)) %>%
+  arrange(desc(Mean))
+# this is not identical to above (b/c not mean of means)
+
+```
+NA = missing values
+
+a special object in R that is not the same as 0
+```{r missing data}
+Vec<- c(1,2,3,NA,5,6,7)
+Vec
+
+mean(Vec) # this returns NA b/c R doesn't know what to do w/ NA (remove? treat as 0?)
+
+mean(Vec, na.rm=TRUE) # this removes NA values
+
+is.na(Vec) # this returns vector of same length as Vec where TRUE means a missing value
+
+sum(is.na(Vec)) # this returns the number of TRUE's (i.e. the num of missing values)
+
+X<- round(runif(10, min=1, max=nrow(Fallo)), 0) # need to round b/c looking for row numbers
+Fallo$Total[X] # these are the values from the randomly selected rows indicated by X
+Fallo$Total[X] <- NA # make these rows NA
+
+is.na(Fallo$Total) # instead of Fallo$total==NA 
+
+# to run group_by funtions above with new NA's, need to add na.rm=T to first mean()
+
+```
+
+Naughty data -> not simple, 2D data. can be messy & R can't read. 
+
+Need to use regular expressions
+
+grep() and grepl() -- 'find'
+
+sub() and gsub() -- 'find & replace'
+
+```{r Regular Expressions}
+Species<- c("petiolata", "verticillatus", "salicaria", "minor")
+Species
+
+grep("a", Species) # outputs an index vector (i.e. there is an a in the first, second, & third cell)
+grepl("a", Species) # outputs boolean vector
+
+sub("a", "X", Species) # only replaces the first a
+gsub("a", "X", Species) # replaces all a's b/c evalutates each cell independently 
+
+# these are both case sensitive 
+
+# \ is an escape character -> what's coming after the slash is diff/ you need to treat it differently
+# \w -- all letters & digits ('word')
+
+gsub("w", "X", "...which 1-100 words get replaced?") # every w is replaced
+gsub("\\w", "X", "...which 1-100 words get replaced?") # replaces every letter & number (not punctuation)
+
+# \s is blank spaces
+gsub("\\s", "X", "...which 1-100 words get replaced?") # replaces every space
+
+
+# \t is a tab character
+gsub("\\t", "X", "...which 1-100 words get replaced?") # good for tabbed data
+
+# \d for digits
+gsub("\\d", "X", "...which 1-100 words get replaced?") # replaces every number
+
+# \D for non-digits
+gsub("\\D", "X", "...which 1-100 words get replaced?") # replaces everything that is not a number
+
+# \r and \n are new line chacters
+# good for making output string w/ seprate lines or a file w/ multiple lines that you want to use regular expressions on
+X<- gsub("\\s", "\n", "...which 1-100 words get replaced?") # note: always just one \ for n
+cat(X)
+write.csv(X, "test.csv")
+
+# | -- or 
+gsub("w|e", "X", "...which 1-100 words get replaced?") # replaces either a w or an e
+
+gsub(".", "X", "...which 1-100 words get replaced?") # replaces everything... "." is a special character that replaces everything except the new line character
+
+# *, ?, + to modify searches
+sub("\\w+", "X", "...which 1-100 words get replaced?") # + means one or more matches, replaces the whole word
+gsub("\\w+", "X", "...which 1-100 words get replaced?") # replaces all words
+
+# * means zero or more matches
+sub(".*", "X", "...which 1-100 words get replaced?") # replaces any number of any character
+
+# {} match particular numbers of matches
+gsub("\\w{5}", "X", "...which 1-100 words get replaced?") # replaces words with 5 letters or the first 5 letters of the word
+gsub("\\w{2}", "X", "...which 1-100 words get replaced?") # replaces every 2 letters in a word
+gsub("\\w{2,5}", "X", "...which 1-100 words get replaced?") # replaces both 2 & 5 letters?
+
+# List options w/ []
+gsub("[abc]", "X", "...which 1-100 words get replaced?") # replaces a or b or c
+gsub("[a-h]", "X", "...which 1-100 words get replaced?") # replaces a range of numbers
+
+# ^ and $ for start/end of line
+sub("^s", "X", Species) # only s as the first letter is replaced
+
+# Capture with ()
+gsub("(\\w)\\w+", "\\1", "...which 1-100 words get replaced?") # replaces the second letter (keeps the first), replaces what's in the first set of brackets with just the first letter
+
+gsub("(\\w)(\\w+)", "\\2\\1", "...which 1-100 words get replaced?") # takes the first letter & puts it on the end
+```
+
+# Review
+
+## Data Science
+
+Data science is a relatively new field of study that merges comp sci & stats w/ other domains of knowledge (i.e. business, bio, psych). Data science as a discipline has grown in popularity in response to the rapid rate of increase in data collection and publication. 
+
+
+Data science often invoves 'Big Data', which doesn't have a strict quantitative def'n but will usually have one or more of the following characteristics:
+
+(The 4 V's of Big Data):
+  * High Volume 
+    - lrg file sizes w/ lots of observations
+  * Wide Variety
+    - lots of diff types
+  * High Velocity
+    - accumulating at a high rate
+  * Compromised Veracity
+    - variable quality that must be dealt otherwise downstream analyses will be compromised
+    
+## 2D Data Wrangling
+
+
+```{r Review Part 1}
+library(dplyr)
+Fallo<- read.csv("FallopiaData.csv")
+str(Fallo)
+```
+This file is an example of a 2-D data set, which is common in bio. 2D datasets have the familar row x col layout used by spreadsheet programs like Excel or Google Sheets. There are some exceptions, but data in this format should typically follow 3 rules:
+
+  1. Each cell contains a single value
+  2. Each variable must have its own col
+  3. Each observation must have its own row
+  
+Making sure your data is arranged this way will usually make it much easier to work with. 
+
+```{r Review Part 1 contd}
+# subset observations based on value
+Pot1<- filter(Fallo, PotNum==1)
+
+# change col names with [] index
+X<- Fallo
+names(X)
+names(X)[12]<- "Total_Biomass"
+names(X)
+
+# change col names with rename()
+X<- rename(Fallo, Total_Biomass = Total)
+names(X)
+
+# sort rows based on col's with arrange()
+X<- arrange(Fallo, Taxon, Total)
+head(X)
+
+# use desc() with arrange() to change to descending order
+X<- arrange(Fallo, Taxon, desc(Total))
+head(X)
+
+# select a subset of col's with select()
+X<- select(Fallo, PotNum, Scenario, Nutrients, Taxon, Total)
+head(X)
+
+# can also use ":" to select range of col's
+X<- select(Fallo, PotNum:Taxon, Total)
+head(X)
+
+# exclude col's with -
+X<- select(Fallo, -(PotNum:Taxon), -Total)
+head(X)
+
+# use everything() with select() to rearrange w/o losing any
+X<- select(Fallo, Taxon, Scenario, Nutrients, PotNum, Pct_Fallopia, everything())
+head(X)
+
+# to make a new col in base R, use $
+X<- Fallo
+X$UrtSil<- X$Urtica+X$Geranium
+
+# use mutate() in dplyr to make new col
+X<- mutate(Fallo, UrtSil = Urtica + Geranium)
+head(X)
+
+# use transmute() to retain new col's and delete everything else
+X<- transmute(Fallo, UrtSil = Urtica + Geranium)
+head(X)
+
+# use summarize() + group_by() to quickly summarize data 
+TrtGrp<- group_by(Fallo, Taxon, Scenario, Nutrients)
+summarize(TrtGrp, Mean=mean(Total), SD=sd(Total))
+
+# %>% (pipe) is useful for combining operations w/o creating new objects
+## instead of:
+X<- group_by(Fallo, Taxon)
+X<- group_by(X, Scenario)
+X<- group_by(X, Nutrients)
+X<- summarize(X, Mean=mean(Total), SD=sd(Total))
+arrange(X, desc(Mean))
+
+## use:
+Fallo %>%
+  group_by(Taxon) %>%
+  group_by(Scenario) %>%
+  group_by(Nutrients) %>%
+  summarize(Mean=mean(Total), SD=sd(Total)) %>%
+  arrange(desc(Mean))
+```
+
+## Missing Data
+
+The R language uses a special object, NA, to denote missing data
+
+When a function is run on a vector or other object containing NA, the function will often return NA or give an error message. 
+
+This is by design, because it is not always clear what NA means. Manny functions in R include an na.rm parameter that is set to FALSE by default. Setting it to true tells the function to ignore the NA
+
+```{r Review Part 2}
+Vec1<- c(1,2,3,NA,5,6,7)
+Vec1
+
+mean(Vec1, na.rm=T)
+
+# NA is different than 0
+Vec2<- c(1,2,3,0,5,6,7)
+mean(Vec2, na.rm=T)
+
+# use is.na() to check for missing values
+## generate test dataset by randomly selecting 10 rows & replacing 'Total' w/ NA
+X<- round(runif(10, min=1, max=nrow(Fallo)),0)
+Fallo$Total[X]<- NA
+Fallo$Total
+## check for missing values with is.na()
+is.na(Fallo$Total)
+### the output is a boolean variable which has handy properties
+
+# boolean variable can be used as an index 
+## see which pots have missing 'Total' values
+Missing<- is.na(Fallo$Total)
+Fallo$PotNum[Missing]
+
+## can also count missing values
+sum(is.na(Fallo$Total))
+```
+
+## Naughty Data
+
+Naughty data contain the same info as a standard row x col (i.e. 2D) dataset but break the rules outlined above:
+
+  1. Each cell cotnains a single value
+  2. Each variable must have it's own col
+  3. Each observation must have its own row
+  
+Naughty data is hard to fix but regular expressions make it easier...
+
+## Regular Expressions
+
+Regular expressions 
+
+  * aka 'regex' and 'regexp'
+  * a sort of find-and-replace for nerds
+  * powerful data tool
+  * requires patience and lots of practice 
+  
+Four Basic Regex Functions in R:
+
+  `grep() and grepl()` are equivalent to 'find' in a word processor
+  
+  * General form: `grep("find this", in.this.object)`
+  
+  `sub() and gsub()` are equivalent to 'find and replace'
+  
+  * General form: `grep("find this", "replace with this", in.this.object)`
+  
+Three Advanced Regex Functions in R:
+
+  `regexpr()` provides more detailed info about the first match
+  
+  `gregexpr()` provides more detailed results about all matches
+  
+```{r Review Part 3}
+# create a simple data frame of species names
+Species<- c("petiolata", "verticillatus", "salicaria", "minor")
+print(Species)
+
+# grep() returns cell addresses matching query
+grep("a", Species)
+
+# grepl() returns T/F associated with query
+grepl("a", Species)
+
+# sub() replaces first match (in each cell)
+sub("l", "L", Species)
+
+# gsub() replaces all matches
+gsub("l", "L", Species)
+```
+
+Wildcards
+
+  `\` escape character
+  
+  `\\` double escape, usually needed b/c first `\` used to escape sepcial character in R and `\` is itself a special character that needs to be escaped to pass through the function
+  
+```{r Review Part 3 contd}
+# Escape characters
+
+## \\w = all letters and digits (aka 'words')
+gsub("w", "*", "...which 1-100 words get replaced?")
+gsub("\\w", "*", "...which 1-100 words get replaced?")
+
+## \\W = non-word and non-number (inverse of \\w)
+gsub("\\W", "*", "...which 1-100 words get replaced?")
+
+## \\s = spaces
+gsub("\\s", "*", "...which 1-100 words get replaced?")
+
+## \\t = tab character (usful for tab-deliminated data)
+gsub("\\t", "*", "...which 1-100 words get replaced?")
+
+## \\d = digits
+gsub("\\d", "*", "...which 1-100 words get replaced?")
+
+## \\D = non-digits
+gsub("\\D", "*", "...which 1-100 words get replaced?")
+
+## \\r = carriage return
+## \\n = newline character
+
+# Special characters
+
+## | = 'or'
+gsub("w|e", "*", "...which 1-100 words get replaced?")
+
+## . = any character except new line
+gsub(".", "*", "...which 1-100 words get replaced?")
+
+## search for a period with \\.
+gsub("\\.", "*", "...which 1-100 words get replaced?")
+
+# use *, ?, +, and {} for more complicated searches
+
+## + = 1 or more matches
+sub("\\w+", "*", "...which 1-100 words get replaced?")
+gsub("\\w+", "*", "...which 1-100 words get replaced?")
+
+## ? is a 'lazy' search (find the first occurrence)
+sub("\\w?", "*", "...which 1-100 words get replaced?")
+gsub("\\w?", "*", "...which 1-100 words get replaced?")
+
+## * is a 'greedy' search (find the last occurrence)
+sub("\\w*", "*", "...which 1-100 words get replaced?")
+gsub("\\w*", "*", "...which 1-100 words get replaced?")
+
+## {n,m} = between n to m matches
+gsub("\\w{3,4}", "*", "...which 1-100 words get replaced")
+
+## {n} = exactly n matches
+gsub("\\w{3}", "*", "...which 1-100 words get replaced")
+
+## {n,} = n or more matches
+gsub("\\w{4,}", "*", "...which 1-100 words get replaced")
+
+# List range of options using []
+gsub("[aceihw-z]", "*", "...which 1-100 words get replaced")
+
+# find everything in square brackets occuring 1 or more times
+gsub("[aceihw-z]+", "*", "...which 1-100 words get replaced")
+
+# ^ start of line
+## find species starting with s
+grep("^s", Species)
+## IMPORTANT: ^ also 'negates' when used within []
+### find species containing any letter other than s
+grep("[^s]", Species)
+### replace every letter except s
+gsub("[^s]", "*", Species)
+
+# $ end of line
+## find species ending with a
+grep("a$", Species)
+
+# capture text using () and reprint using \\1, \\2, etc
+## replace each word with its first letter
+gsub("(\\w)\\w+", "\\1", "...which 1-100 words get replaced?")
+## pull out only the numbers and reverse their order
+gsub(".*([0-9]+)-([0-9]+).*", "\\2-\\1", "...which 1-100 words get replaced?")
+## reverse first two letters of each word
+gsub("(\\w)(\\w)(\\w+)", "\\2\\1\\3", "...which 1-100 words get replaced?")
+```
+
+# Git Version Control Video Questions
+
+  1. Briefly explain the differences between a 'save', 'commit', 'branch', and 'merge' in Git
+  
+save = save that version over your old version
+
+commit = save recent changes with diffs to git
+
+branch = create a second route of commits without altering the original commit seq
+
+merge = join branches to a single commit 
+
+  2. Why are commits more advantageous than regularly saving your files?
+  
+Commits track changes (diffs) for version control. Enhances collaboration b/c changes from each collaborator are easy to follow. Allows one to return to an older version to restart a process or create a second version (i.e. branch). 
+
+  3. What is the .gitignore file used for?
+
+This removes files from the commit 
+
+  4. What are ‘push’ and ‘pull’ used for?
+  
+push = refresh current commits to github 
+
+pull = take commits from someone else's github
+
+  5. What’s the difference between Git and GitHub?
+  
+Git is the program in R allowing version control. Github is a repository allowing versions to be shared publically.
+
+  6. What is your GitHub username?
+
+haybracky
+
+#Practice Exercises
+
+Consider a vector of email addresses scraped from the internet:
+
+  * robert ‘dot’ colautti ‘at’ queensu ‘dot’ ca
+  * chris.eckert[at]queensu.ca
+  * lonnie.aarssen at queensu.ca
+  
+Use regular expressions to convert all email addresses to the standard format: name@queensu.ca
+
+```{r}
+Rob1<- "robert ‘dot’ colautti ‘at’ queensu ‘dot’ ca"
+Rob2<- gsub("\\W", " ", Rob1)
+Rob3<- gsub("dot", ".", Rob2)
+Rob4<- gsub("at", "@", Rob3)
+Rob5<- gsub("\\s", "", Rob4)
+Rob5
+
+c<- gsub("at", "@", chris)
+c1<- gsub("\\[|\\]", "", c)
+c1
+
+lon<- "lonnie.aarssen at queensu.ca"
+lon1<- sub("(\\s)at(\\s)", "@", lon)
+lon1
+```
+
+
+# Quiz
+
+```{r}
+words<- "Write a line of R code that will switch the first and last letter of every word in this sentence if the word is >3 letters long"
+gsub("(\\w+)(\\w)(\\w)(\\w+)", "\\4\\2\\3\\1", words)
+```
+

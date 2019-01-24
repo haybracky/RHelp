@@ -1,0 +1,232 @@
+---
+title: "Week 1 Class Notes"
+output: html_notebook
+---
+
+Date: 08/01/19
+
+#Preamble 
+
+This notebook contains class notes for BIOL432 Week 1
+
+#Content
+
+Project files help contain files and make them easy to share
+
+```{r check wd}
+getwd()
+```
+When you open a proj file, it will default to your directory, regardless of where it's saved
+
+```{r math commands}
+10+2
+10*2
+10-2
+10/2
+10^2
+abs(-10) # absolute value
+sqrt(10-1)
+log(10)
+log10(10)
+?log # get help with the function log
+log(64,4) # log base 4 of 64
+exp(4)
+sin(pi/2)
+acos(-1)
+tan(0)
+atan(0) # inverse tangent
+round(pi,3) # rounds pi to 3 digits
+floor(pi) # rounds pi down
+ceiling(pi) # rounds pi up
+signif(pi,digits=2) # sets num of sig dig for pi
+```
+
+Important that the code is readable & interpretable 
+
+```{r arranging data}
+log(64,
+    4) # functions can span more than one line
+# helps organize data in a readable way
+```
+
+## Logic Operators
+
+```{r logic operators}
+1>2
+1<2
+1<=2
+1=1 # this does not work b/c = used to define objects
+test<- 0 # defines the object test as 0 ... in other words puts 0 in the object test
+test=9 # also puts 9 in the object test. Both methods work
+1==1 # this is used to evaluate 
+1!=1 # not equal to
+1==2 | 1==1 # asking if one is equal to 2 OR 1
+1==2 & 1==1 # asking if one is equal to 2 AND 1
+```
+
+```{r make group of numbers}
+numbers<- c(1,2,3,4,5,6,7,8) # makes a vector called numbers
+numbers
+4 %in% numbers # is 4 in the vector numbers?
+```
+
+```{r selecting numbers}
+runif(10,min=0,max=1) # selects 10 random numbers betn 0 and 1 from a uniform distribution
+rnorm(10,mean=0,sd=1) # selects 10 random numbers from a normal distribution with mean 0 and standard deviation of 1
+rpois(10,lambda = 10) # selects 10 random numbers from a poison distribution with lambda = 1
+rbinom(10,size=1,prob=0.5) # this is like flipping a coin with 2 sides once
+rbinom(10,size=10,prob=0.5) # this is like doing it 10 times... 5/10 heads, 4/10 heads, 2/10 heads, etc. 
+```
+
+can be hard to tell if output numbers b/c of randomness or b/c of error
+trial this by using pseudosampling
+
+```{r pseudosampling}
+set.seed(3)
+runif(5)
+# comps can't generate truly random nums. by setting a seed, you force the comp to use the same seed. you will always get the same set of random nums by using that same seed
+```
+
+```{r concatenate}
+# there are 3 types of data: integer, float, string
+  # float = num w/ decimal, real number
+  # string = everything else
+
+#combine these
+c(1,2,3.14) # automatically converts integers to floats
+
+c(1,2,3.14,"test") # automatically converts all to strings
+c(1,2,3.14,lkjava) # treats it as an object rather than a string, error b/c object not defined
+
+c(1:100) # outputs every integer btwn 1 & 100
+c(-10:10) # same but using -ve nums
+
+X<- "string"
+X
+print(X) # needed for loops
+paste (X) # good for combining things
+Xvec<- c(X,1:10,"E","Computation",100:50)
+Xvec
+# note: all objects created are listed under Global Enviornment
+  # this is helpful for troubleshooting :)
+
+# num corresponding to element in vector in [ ]
+Xvec[55] # retrieves 55th element in the vector Xvec
+```
+
+```{r matrix}
+Xmat<- matrix(Xvec, nrow=8) # number of rows (nrow) needs to be multiple of data length (Xvec)
+Xmat # this is an 8 x 8 matrix
+# [x, ] = row num   [ ,x] = col num
+Xmat[5,] # pulls out everything in the 5th row
+Xmaat[5,3] # pulls out element in 5th row, 3rd col
+```
+
+```{r List}
+MyList<- list(name="biol432",potpourri=Xvec,numbers=1:10)
+MyList # this object has diff components (name, potpourri, numbers)
+
+MyList$numbers # subsets list
+
+# general form of lm:
+#lm(Y~X)
+testmod<- lm(rnorm(10)~rnorm(10))
+names(testmod) # this is just a list
+
+testmod$coefficients
+```
+
+This is useful for reproducibility & replication 
+
+```{r Slice & Extract}
+MyList[3] # slice
+
+MyList[[3]] # extract -> this does not keep the numbers w/ the name of the list
+
+MyList[[3]]*10
+MyList[3]*10 # this only works with extract b/c slice takes the title of the list so it doesn't treat it as numbers
+testmod[[1]]
+```
+
+```{r Paste}
+paste("Hello world!")
+paste("Hello","World","!") # automatically puts spaces btwn each element
+paste(1:10) # keeps these as a string
+
+paste("Hello",1:10) # Hello is vector length 1, 1:10 is vector length 10 ... takes element from each 10 numbers & the next element of Hello but only length 1 so all say Hello
+
+paste(1:2,1:10) # takes vector of 2 num & vector of 10 num & pastes together
+```
+
+```{r working w/ data}
+Fallopia<- read.csv("FallopiaData.csv")
+Fallopia
+head(Fallopia)
+names(Fallopia)
+tail(Fallopia)
+str(Fallopia)
+dim(Fallopia)
+nrow(Fallopia)
+ncol(Fallopia)
+
+# combine data of Symphytum & Silene biomass
+Fallopia$combine<- Fallopia$Symphytum+Fallopia$Silene
+# could also do...
+Fallopia$combine<- Fallopia["Symphytum"]+Fallopia["Silene"]
+# don't use col or row num b/c if data set changes, these change & you wouldn't notice
+
+levels(Fallopia$Nutrients)
+
+LowNut<- subset(Fallopia, Nutrients=="low") # subset data
+write.csv(LowNut,"Subset.csv") # this makes the subset as a new csv file saved in the wd
+
+names(Fallopia)
+
+# want to know total biomass in high vs low
+aggregate(Total~Nutrients, data=Fallopia, mean) # takes col Total & groups by Nutrients in data set Fallopia & calculates mean
+aggregate(Total~Nutrients*Scenario, data=Fallopia, mean) # also groups by scenario
+aggregate(Total~Nutrients, data=Fallopia, sd) # gives standard deviation
+
+tapply(Fallopia$Total, list(Fallopia$Nutrients), mean) # gives same results 
+
+```
+
+```{r Flow Control}
+X<- 10
+X<- 100000
+
+if(X > 100) {
+  print("X > 100")
+} else {
+  print("X <= 100")
+}
+
+for(i in 1:X) {
+  print(i)
+} ## takes object i & makes it 1 & does what's in {}, then comes back & makes i 2, etc.
+
+for(i in Xvec){
+  print(i)
+}
+
+# write for loop to cycle thru 100 nums
+# if num is even, print num
+# if num is odd, don't print
+for(i in 1:100){
+  if (i%%2==0) {
+    print(i)
+  }
+}
+
+set.seed(3) # setting seed so randomly selected numbers from uniform distribution will always be the same
+for (i in runif(10,min=-1,max=1)){
+if (i>0){
+print(i)
+}
+}
+# this loop selects 10 numbers from the uniform distribution from seed 3 & only prints when positive 
+
+# print isn't necessary if manipulating / creating vectors based on other vectors
+
+```
+

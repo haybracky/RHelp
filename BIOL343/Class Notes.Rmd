@@ -1,0 +1,1849 @@
+---
+title: "BIOL343"
+output: 
+  html_notebook: 
+    highlight: tango
+    theme: spacelab
+---
+
+#Week 2
+This is like a word document for R
+
+You can:
+
+- make a title using # 
+
+  - # = first level title
+  
+  - ## = second level title
+  
+- some formatting 
+
+  - *italics* or **BOLD** 
+  (one or two stars)
+
+Writing R code:
+
+```{r}
+paris<-4+5^6
+paris
+```
+**Anotate the code after** 
+
+
+Can store things in objects
+
+Ex.
+
+Paris<-4
+
+Paris<-"This is confusing"
+
+
+Reserved words highlight in red because you can't store them in an object
+
+Iris data set stored in the word iris
+```{r}
+iris
+plot(iris)
+```
+##Note:
+
+Create a new chunk : Ctl+Alt+I
+Label a chunk: {r your label}
+
+#On the top of every notebook:
+
+##Preamble
+
+What this file is about
+
+##R Details
+
+  * File creation date `r Sys.Date()`
+  * `r R.version.string`
+  * `tidyverse` package `r packageVersion("tidyverse")`
+  * `emmeans` package `r packageVersion("emmeans")`
+  * etc for other packages
+  
+##Load Packages
+```{r Packages}
+library(tidyverse)
+#etc for other packages
+```
+
+Make a "Basics" file for this general stuff
+
+```{r Iris Data}
+names(iris)
+```
+
+
+##Get the data
+
+Using the built in data set iris
+
+  * Sepal.Length = length of sepal (mm)
+  * Sepal.Width = sepal width (mm)
+  * etc
+  
+```{r my data}
+dat1<-read.csv("name.csv")
+names(dat1)
+```
+
+```{r data wrangling}
+dat<- iris%>% mutate(SL=Sepal.Length, SW=Sepal.Widthy)
+```
+
+#Why Statistics?
+
+  1. Make inferences about a populatiion (from  sample)
+  2. Quantify uncertainty 
+  
+-> common response to exam question: bigger sample size
+  will decr you p value
+  
+Type S error = sign error
+  i.e. M bigger than F but actually F are bigger than M
+      x is bigger than y when y is actually bigger than x
+  
+Repeating the sample is important to make sure you get a wide variation of your population
+
+Type M error = magnitiude error
+  i.e. difference btwn x & y larger or smaller than reported
+  
+More studies that show the same results = more confidence in your results
+
+One study doesn't mean anything
+
+Q: why do we use statistics?
+Q: what is a CI?
+
+#For Assignment 2
+```{r load packages}
+library(dplyr)
+library(Publish)
+```
+
+```{r mtcars}
+?mtcars
+#get info about built in data set or function
+```
+
+```{r confidence interval}
+CI1<-ci.mean(mpg~am+cyl, data=mtcars)
+CI1
+```
+mean[UCL:LCL]n
+
+```{r plot confidence interval}
+plot(CI1)
+```
+
+No overlapping CI = suggests there is difference
+  i.e. seems likely that 4 cyl manual cars have more mpg
+
+Q: what do you see? what would you describe from this graph?
+
+How can we make this better? -> incr sample size
+  CI will shrink
+  
+```{r summary}
+sum1<-mtcars%>%
+  summarise(n=n(),mean(mpg),sd(mpg),min(mpg),max(mpg))
+sum1
+#create a summary table
+```
+
+#Tutorial
+
+  * piping makes things easier to type out when working with variables
+   
+    i.e. subsetting into R
+   
+    excel file does not change
+    
+#Week 3
+
+##Midterm
+  * Thirty Questions
+  
+  * based on lectures & chap 1-9, 13, 14, 18, 20-22, 25, 26
+  
+  * all midterm & final M/C questions will be drawn from this set... not worded the exact same
+  
+1. Why do statistics?
+  Make inferences about a populatiion (from  sample)
+  Quantify uncertainty 
+  Calculate a point estimate (measure of central tendancy) & margin of error for that point estimate 
+  Reveal patterns
+  Estimate the size of an effect (i.e. diff btwn 2 samples)
+  To guide further research b shairing where theremight be patterns of interest
+
+2. What is a confidence interval?
+  Margin of error
+  You don't know if the CI contains the mean, but there is a high certainty
+
+3. For a given sample, which is biggeer, the 95% CL or the 99%?
+  99 -> you have to incl. more values in order to be more certain
+  Bigger CI, wider range of possibilities of where it might be 
+  
+4. What is a P-value?
+  The probability of getting a value as extreme or greater than what you observed had the null hypothesis been true
+  
+5. What is an effect size?
+  Magnitude of the difference (unit effect size)
+    Has biological relevance
+  Formal effect size -> how big the difference is between standard deviations
+    Unitless
+  Absolute vs scaled (by SD)
+
+6. What is a unit effect?
+  Magnitiude effect in the units given
+  
+7. How can you reduce uncertainty?
+  Incr. sample size
+  Resample
+  Collect more data & collect more carefully
+  types of uncertainty:
+    a) Biological variability
+    b) Measurement error
+    c) Sampling error
+
+8. What is the most useful kind of sample?
+  Simple random sample
+  Haphazardly selecting causes no clusters which is unlikely
+  Note: chances are in the lit, people who say they "randomly sampled" did not
+  Only way to take a random sample is to use a random generator 
+  Nothing wrong with a haphazard sample, you just need to call it that
+  Bias is inherent, just need to recognize that
+  
+9. When is a P-value most accurate?
+  Random samples
+  Accurate measurements/ careful collection
+  Pre-registration -> before you go to collect data, you determine what you will do with the data (avoids p-hacking)
+    P-value invalidated by changing your analysis
+  Normal distributions
+  question asked has logical, theoretical or imperical basis
+  
+10. How does a measure of variation change with sample size?
+  Bigger sample size, smaller margin of error, lower measure of variance 
+
+11. There are 48 females and 6 males in this class, what are the odds that a randomly chosen student is male?
+  probability = 6/54 = 1/9
+  odds = 6/48 = 1/8
+  
+12. What does the middle line in a Tukey boxplot represent? What is the box what are the ends of the whiskers?
+  Middle = median
+  Top & bottom lines = 25th & 75th percentile (contains 50% of the data, 25% of the data lies above & 25% below)
+  Whiskers = 1.5 times IQR
+  
+13. What does a histogram represent?
+  Frequency distribution of binned data
+
+
+##Programming
+
+```{r view}
+View(mtcars)
+```
+^ data.frame
+
+Each column is a vector
+```{r indexing}
+mtcars$hp
+mtcars[,4]
+```
+^ equivalent statements to call up a specific row/col
+
+Row # first, Col # second
+
+^^ look at all rows in col #4
+
+^^^ Indexing
+
+```{r hist}
+hist(mtcars$hp)
+```
+Use the eyeball method to determine if something is normal or not
+
+^ does not look normal
+```{r log 10 hist}
+hist(log10(mtcars$hp))
+```
+^ looks normal now
+
+```{r qqnorm}
+qqnorm(mtcars$hp)
+qqnorm(log10(mtcars$hp))
+```
+On a QQ-plot, if data normally distributed, will be in straight line
+
+Eyeball it
+
+^ log10 looks like a straight line so ND
+
+  * p-value is not reliable if data is not normally distributed
+```{r generate data from ND}
+# generate data from ND
+## (n, mean, SD)
+dat1<-rnorm(1000, 5.2, 2.1)
+dat1
+```
+```{r generate data from uniform distribution}
+# 1000 data points, min, max
+dat2<-runif(1000, 6, 37)
+dat2
+```
+^ not normal!
+```{r declaration statement}
+# set up variables to be empty
+dat4<- 0
+dat4
+dat3<- (runif(1000, 6, 37))
+dat3
+```
+Make a loop to generate data...
+```{r loop}
+# make a loop, i, that will start at 1 & continue up to 1000
+for (i in 1:1000){
+  dat5<- sample(dat3, 15)
+  dat4[i]<- mean(dat5)
+  }
+```
+^ i is a placeholder
+
+- dat5 will have 15 individuals taken from dat3
+
+- dat4 takes the mean of the 15 numbers from dat5
+
+- loop runs 1000 times so you will get 1000 means
+```{r}
+hist(dat4)
+qqnorm(dat4)
+```
+^ proof of central limit theorem
+
+The mean of means is a ND
+
+**Good for assessing value of results**
+
+download pastecs & dslabs
+
+##Questions:
+
+1. What are three sources of 'error'?
+
+  a. sampling error
+    sampling a subset of individuals that is not representative of the popuulation b/c of randomness 
+    
+  b. sampling bias
+    random & human bias
+    
+  c. biological variation
+  
+  d. impercise measurements (experimental error)
+  
+  e. mistakes (human error, bias)
+  
+2. There are 60 data points on the graph below, which one is at the 90th percentile
+  
+  E -> start at bottom of distribution, go up to 90th in order (54th out of 60 data points)
+  
+3. The mean length of a tiger's tail is 50cm (n=25 tigers) and the SD is 5cm. What is the coefficient of variation?
+  
+  SD = way of scaling coefficient of variation by the mean
+  can use SD to compare variability btwn all means on the same scale
+  unitless (%)
+  
+4. Which is larger ?
+
+5. Which of the following samples has SD=0
+  c = 5,5,5,5,5,5,5
+  
+6. Which is larger the SD of smaple or the SE of the sample mean?
+  
+  SE = standard deviation of the mean
+  
+  SD = of whole population
+  
+  SE always small 
+  
+  How many standard 
+  
+  95% confidence = 2x SE
+  
+7. Which of the following samples could have been drawn at random from a normal distribution?
+  
+  All of them
+  
+  A sample may not look normal 
+  
+  the population is normally distributed but the sample could be not
+  
+8. Can a P-value equal zero?
+
+  No -> say P>0.0001
+  
+  Theoretically possible to have p=1
+  
+9. What is alpha?
+
+  The significance level -> you set this
+  
+  If P>alpha, NS
+     P<alpha, Sig
+  
+10. Can you accept a null hypothesis?
+  
+  No -> you can never be sure that the null is correct
+  
+  Pretty certain all null's in bio are false... if you don't reject, then your sample is probably not big enough
+  
+11. How do you increase statistical power?
+
+  power = ability to reject 
+  
+  Incr. sample size
+  
+  Decr. alpha ? 
+  
+  Make HA two tailed -> alpha divided by two tests
+  
+  Would pick 2 tailed if there's an underlying theoretical or imperical reason to expect one direction to be significant. 
+  
+12. What is an outlier?
+
+  Anything outside 1.5 times IQR
+  
+  Something that deserves a second look
+  
+  Make sure it's not just an experimental error
+  
+13. Is the correlation btwn X & Y the same as the correlation btwn Y & X?
+
+  Yes -> how much variation in one variable is explained by the variation in the other variables
+  
+  The reverse must be true
+  
+  Not true for regression... regression lines would have different slopes
+  
+  Correlation doesn't imply causation... y isn't necessarily caused by x & x isn't necessarily caused by y
+  
+14. Which of the following relations has the highest correlation coefficient?
+
+  The better you can predict y from x or vise versa, the better the correlation
+  
+15. When the correlation coefficient r=0.50, how much of the variation in  is explained or accounted for by variation in X?
+
+  25% -> r^2 -> proportion of one variable explained by proportion in other variable
+  
+*ODDS will not be on midterm*
+
+#WEEK 4
+
+##Power
+```{r}
+library(pwr)
+```
+power = the probability of rejecting a null hypoth that is false
+
+  * prospective power -> guess at what difference you will observe based on SD... tells you what sample size you need
+
+  * retrospective power -> after you've done the analysis... suggested to be useless
+  
+```{r}
+p1<- power.t.test(delta=0.75, sd=2.25, power=0.8)
+p1
+```
+
+lower p = more confidence in the difference we're observing
+
+The bigger the effect size, the more likely it will be significant
+
+  -> Reported effect sizes are actually bigger than real effect sizes
+
+P is the probability of obtaining a test statistic at least as extreme as the one that was actually observed, if the null hypothesis is true
+
+Bigger sample size... lower P value
+
+##APA Manual
+
+  * report effect size
+  
+  * include CI
+  discussion & interpretation should be based on point estimate, not P-value
+  
+Plot dots not bars
+
+##Open access Journals
+
+##For Assignment 3 
+
+-> use sample
+
+t - test:
+
+  * sample -> test -> test stat -> P-value -> conclusion
+  
+always talk about the species you're looking at, not the statistics
+  
+  i.e. Males are bigger than Females ... blah blah blah
+  
+```{r}
+x1<-power.t.test(delta=5, sd=6, power=0.8)
+plot(x1)
+?t.test
+```
+
+"use statistical support, not significant"
+
+Report affect size
+
+Replicate
+
+Do meta-analyses
+
+##What about P values?
+
+  Use to evaluate model fit
+  
+  an indication of power
+  
+  as a guide to the adequacy of your sample size to determine the real difference
+  
+#Week 5
+
+No class monday
+
+tuesday: rm D116 -> midterm (M/C)
+
+thursday: rm D116 -> midterm (S/A) 
+
+everything will be marked by end of reading week
+
+##Colours
+
+Three traits to characterize colours:
+
+  * hue
+  
+  * brightness
+  
+  * saturation
+  
+... we can measure hue on a scale (in nm)
+
+We can see colours 400-700nm
+
+Hue -> continuous variable
+
+Colour (i.e. blue, dark blue, red, yellow, etc) -> categorical/nominal variable
+
+Ordinal variable
+
+##General linear model
+(lm()) <- general linear model
+
+glm <- generalized linear model 
+
+y=a+bx+ε
+
+  * x = predictor (b1x1, b2x2, b3x3...)
+  
+  * a = y-intercept / intercept
+  
+  * y = response variable
+  
+  * b = slope
+  
+  * ε = error (sampling, measurement, experimental)
+  
+ 
+                                            RESPONSE (y)
+                                 categorical          Continuous
+                ---------------------------------------------------------
+                  categorical   contingency             t-test
+                                   table                 ANOVA
+                                                        MANOVA
+                ---------------------------------------------------------                                     
+                   continuous    logistic              correlation
+                                                       regression
+                                                       
+                                                       
+##Linear Regression Models
+
+- residuals -> vertical distance from calculated line
+
+  - trying different lines... least squares residuals
+  
+- important assumptions -> test after the model
+
+  - how well does model fit data? how well does data fit model?
+  
+- assumption: relation btwn x & y is linear
+
+- assumption: each data point is independent
+
+- assumption: residuals are normally distributed 
+
+- influential points are not immediately affecting the result 
+  - not like an outlier or residual problem
+  
+## QUESTIONS FOR MIDTERM
+
+Which of the following assumptions are shared by all stat tests?
+
+- normal distribution of data in samples
+
+- ND of values in pp'n being sampled
+
+- ND of residuals from models
+
+- random samples
+
+- accurate dtata
+
+- unbiassed data
+
+Nonparamentric tests always have less power than parametric tests?
+
+- parametric = y & x are normal or have normal residuals
+
+- Non-parametric = distribution free
+
+the coefficient of determination is:
+
+- r^2
+
+- the square of the correlation coefficeint
+
+- the proportion of variation in Y explaied by the variation in x
+
+- always smaller than r
+
+- r-squared
+
+- epsilon = 1-(r^2) -> epsiolon = hair colour, gender, skin tone -> every time you add another predictor into the model, r^2 goes up
+
+  - in medicine, we want to incr r^2 but not unneccisarily 
+  
+##MIDTERM
+
+- 3 of 5 are correct & you have to get all 3 to get full marks
+
+- S/A -> don't fill the box, point form is fine, looking for understanding -> no right answer -> multiple parts
+  -> research based... -> similar to M/C
+  
+- quiz in last week the same but based on whole course
+
+## Modelling
+```{r}
+library(sjPlot)
+library(arm)
+library(car)
+library(pastecs)
+```
+```{r load dataset trees}
+trees
+```
+
+-> when doing modelling ... think of a predictor & a response
+
+```{r modelling}
+mod1<- lm(Volume~Height, data=trees)
+summary(mod1)
+```
+^ to see if there's a correlation coefficient, query the model itself... 
+
+```{r Show everything stored in the model}
+str(mod1)
+```
+^ r^2 value = 0.3579
+
+^^ p value also stored in here
+```{r r}
+sqrt(0.3579)
+```
+correlation (r) = 0.60
+
+p value for r is the same as the p value for the model
+
+  * p<0.001
+  * p=0.0004
+  
+- correlation is significant -> the correlation is probably not 0 (strong evidence)
+
+    aka there is a correlation between Volume & Height
+
+- the correlation coefficient itself doesn't have a sign 
+
+Report:
+
+  Volume is strongly correlated with height (r=0.60, p=0.0004, n=31)
+  
+> H vs V
+> H vs G
+> G vs V
+
+```{r correlations}
+corrplot(trees, color=TRUE)
+```
+^ summary of correlations
+```{r correlation matrix}
+cor(trees)
+```
+```{r infidence interval}
+confint(mod1)
+```
+^ 95% CI... ranges from 2.5%-97.5% 
+
+  * we have confidence the real slope lies within the range -149.99 to -27.25
+  * slope = 1.54[0.75, 2.33]31
+      (explain in your methods that you are reporting it as slope[LCL,UCL]n
+
+Assumptions:
+
+  * linear -> relationship btwn y & x can be represented w/ a straight line
+  * residuals are normal 
+  * homoscedasticity -> variance on y is the same at all x
+  * no highly influenctial points -> i.e. outliers
+  
+```{r plot mod1}
+plot(mod1)
+```
+^ residuals fitted -> incr. ... violates assumption of homoscedasticity
+
+^^ normal QQ -> deviates
+
+^^^ standardized residuals -> divides residuals by SD of residuals & plots them... -ve residuals plotted as +ve 
+
+   * shows you how far residuals are from regression line
+    
+^^^^ Residuals vs Leverage -> points away from dotted line have more influence on slope than other poits -> dotted line = tollerable limit -> looks like they all are... 31 = influential but not untollerably influential
+
+```{r testing assumptions}
+plot_model(mod1, type="diag")
+```
+^ graph 2 -> normality -> not on line so not good
+
+^^ graph 3 -> blue = ND, data = red... not very normal 
+
+^^^ graph 4 -> residuals increasing 
+
+```{r model slope}
+plot_model(mod1, type="slope")
+```
+^ red means the area which the slope lies within
+
+^^ note, it doesn't draw the zero line
+
+blue line = locally weighted scattered regression lines (?)
+  
+  does little regressions on the data... shows how accurate the red line is
+  
+  messy ... but more accurate
+  
+"diagnostic plot"
+```{r slope w/ data points}
+plot_model(mod1, type="slope", show.dat=TRUE, colors="Set2")
+```
+
+```{r forest plot}
+plot_model(mod1, type="std")
+```
+^ standardized estimate & CI
+
+```{r mod2}
+mod2<- lm(log10(Volume)~Height, data=trees)
+plot(mod2)
+```
+```{r}
+plot_model(mod2, type="diag")
+```
+Result -> less confidence in our results... replicate the study? 
+
+```{r}
+library(GGally)
+library(Hmisc)
+```
+- X is +vely correlated w/ Y (r=0.36, P=0.01, n=236)
+
+- Y is predicted by X (volume=3.72+4.6, Height=0.14, r^2=0.14, n=236, P=0.01)
+
+- correlation & regression aren't hte same thing
+
+  * regression always includes correlation info
+  
+  * predict = regression
+  
+  * correlation = correlation
+  
+##Midterm questions:
+
+In a least squares regression analysis is the slope of the relation of Y on X the same as the slope of x on Y?
+
+- They can't be the same thing -> always measuring the vertical differences 
+
+- why it's important to identify the predictor & response
+
+If ou doble the sample size but he r-vale does not cahnge what happens to the P-value? What happens to the CLs?
+
+- larger sample size = smaller r (in general... not always true)
+
+- CLs go down
+
+In linear regression od the Y & X variables have to be measured int he same units?
+
+- No -> 
+
+Which of the following are assumptions of least squares linear regression?
+
+- residueals normally distributed
+
+- datat pts independent
+
+- relation btwn Y & X is actually a straight line
+
+- variation in Y is the same for all values of X
+
+- data randomly sampled from pop'n
+
+Which of the following graphs show sa relation w. the highest correlation coefficient? -> C
+Which has the highest slope? -> D or E 
+
+Short answer exampe: Which of these graphs makes the most sense & why?
+
+- Height best on X axis, weight on Y axis
+
+- line should not extend past the data points -> model fits the data... can't extrapolate beyond the data
+
+- makes more sense to show the CI
+
+##Correlations & Regressions
+```{r}
+ggpairs(rock)
+```
+Which of these break regression assumptions?
+
+- peri-perm -> definitely not linear 
+
+```{r}
+ggpairs(iris)
+```
+^ if there's too many levels -> error
+
+-> doesn't have P-values
+
+```{r}
+rcorr(rock)
+## needs matrix format
+rcorr(as.matrix(rock))
+```
+^ top = correlations
+
+^^ bottom = p value for correlations
+
+note: 0 is *NOT* 0 -> it is <0.001
+
+```{r}
+rcorr(as.matrix(LifeCycleSavings))
+```
+^ for P-value table, numbers are the same b/c small dataset... if large dataset -> above diagonal = corrected p-values, below diagonal = uncorrected p-values
+
+- if alpha = 0.05 -> alpha ' = 0.05/10 = 0.005
+
+#Week 7 
+
+## t-tests
+
+- when you have a batch of data & you run multiple t-tests, your p value is compromised
+
+- need to adjust -> divide by # of comparisons -> Bonfferoni 
+
+- Fischer
+  * if means are the same, ratio of among variance to mean variance = 1 = F
+  * Ratio of among & within variance is 1 if means are equal
+  
+  * if means unequal, F>1... F should never be <1 (impossible)
+  
+  *ANOVA -> gets around issues with Bonfferoni corection
+  
+*Assumptions*
+
+  - homoscedasticity -> equal variance
+  - random, independent samples 
+  
+  "a linear model where categorical variables have a continuous response"
+  
+Ex. F=30
+    P=0.02
+    n=10,10,10
+    -> likely correct because variance high & p value small
+    
+For F test...
+  two types of degrees of freedom
+  related to among & within df
+  # samples - 1, # observations - 2
+  F=sqrt(t)
+  
+## Model fitting
+
+- stats = making model, how good does data fit model 
+
+- r^2 = 1.00 => good fit
+- r^2 = 0.01 => bad fit      but both of these could be significant (P<0.05)
+
+- # predictors must be less than sample size
+- more predictors = higher r^2
+- 
+
+- Exam Q: testing wheather you have confidence if the intercept & slope is not 0
+
+- p vlaue in model is testing wheter slope & invercept are different from 0
+- r^2 is how well model fits data
+
+##t-test
+
+- t test asks if mean of A = mean of B
+- Assmptions:
+  * variances equal
+      Var=SD^2
+
+```{r filter}
+dat1<- iris%>% filter(Species!="setosa")
+```
+
+```{r model}
+mod1<-lm(Sepal.Length~Species, data=dat1)
+#Species => categorical w/ 2 levels (virginica, versicolor)
+summary(mod1)
+```
+ ^ intercept is 5.9360
+   Slope is 0.652
+   
+```{r t-test}
+t.test(Sepal.Length~Species,data=dat1)
+6.588-5.936
+```
+```{r variation}
+mod2<-lm(Sepal.Length~Species, data=iris)
+summary(mod2)
+```
+
+difference btwn 3 species expalined 61.8% of the variation (r^2)
+-> the rest of the variation: within species variation -> biological variation, measurement error, etc. 
+
+```{r check assumptions}
+plot_model(mod1, type="diag")
+```
+^ if the model doesn't meet assumptions, be cautious of P value
+```{r iris confidence interval}
+CI1<- ci.mean(Sepal~Length, data=dat1)
+```
+
+## Paired T-test
+
+- want separate columns to show what data is paired
+- more powerful analysis -> pairing = decr p value
+
+```{r dataset -> pre & post}
+anorexia
+```
+^ single individual measured before & after
+
+Pre-weight & Post-weight
+- looking at the difference -> pre1-post1 -> the differences have to be different from 0
+```{r paired t test}
+mod3<- lm((Postwt-Prewt)~1, data=anorexia)
+summary(mod3)
+```
+^ imagine the predictor is 1... response is difference... 
+  looking at what is the intercept, slope is 1
+  
+  therefore intercept is 2.76
+  
+```{r paired t-test}
+with(anorexia,t.test(Postwt, Prewt, paired=TRUE))
+```
+^ same as above           
+
+```{r}
+library(sjPlot)
+library(Publish)
+library(tidyverse)
+```
+
+  * When testing the assumptions look at 
+    * Independent, random 
+    * Equal variance 
+    * Residuals from the model are normal 
+    * Outliers 
+    * Make sure that the predictor variables are independent (look to see if they are correlated.. significantly)
+    
+#ANOVA
+  * 2 way, 2 factor, multi factorial
+  
+```{r}
+glimpse(mtcars)
+```
+
+mpg ~ cyl + am 
+  * cyl has 3 levels (4,6,8)
+  * am has two levels (0,1)
+  * you must tell R that they are factors 
+  
+```{r}
+mtcars$Fcyl <- as.factor(mtcars$cyl)
+mtcars$Fam <- as.factor(mtcars$am)
+glimpse(mtcars)
+```
+int=integer
+fct=factor
+```{r}
+mod1<- lm(mpg~Fcyl + Fam, data = mtcars)
+```
+
+  * Unless the slopes are the same there will be an interaction 
+  * Interactions are possible and when they are you need to specify 
+
+```{r}
+summary(mod1)
+```
+  * they have an effect on each other when they control the other element.
+  * the only way to test independent effect is to test them independently 
+  
+```{r}
+mod2<- lm(mpg~Fcyl * Fam, data = mtcars)
+summary(mod2)
+```
+  * this shows an interaction 
+  * If the p is less than .2 or .25 leave the interaction in the model.. they are having an effect 
+  * Does this have any effect at all
+  * when there in a interaction in the model you cannot interpret the main effects because the interaction is effecting it (you just do not know if there is no effect)
+  * report this table 
+  * this model explains 79% of the variance in mpg 
+  * adjusted is to compare models (0.7469)
+
+```{r}
+plot_model(mod2, type = "int")
+```
+^ int = interaction
+  * first one has a slight interaction
+  * mean and confidence limits .. in the model 
+
+
+```{r}
+plot_model(mod2, type = "diag") #Test assumptions 
+```
+^ diag = diagnostic
+
+  * are the predictors correlated to each other 
+  * no tollerable.. the predictor variables are correlated to each other
+
+Two reasons and conclusions: 
+  1. Best model (high r^2) prediction 
+  2. Which predictors are best 
+
+The number of cylinders in a car and the transmission type have a significant effect on mpg 
+(F 5,26 = 19.3, P < 0.001, n = , R^2 = ) 
+
+# Week 8
+
+##ANOVA
+
+ANOVA linear model -> F=3.2, P=0.02 
+  means there is significant variability
+  doesn't tell you where
+
+If it is signficant -> test post hoc ("after this")
+  17 possible post hoc tests to run
+  -> incl. John Tukey
+    -> Tukey HSD
+    
+##Tukey HSD
+
+  - tells you result of all comparisions
+  - tells you the difference btwn means
+  - tells you P-value (useless... do not report value, just signficance)
+      p<0.05 => significant 
+
+Example: 
+Model (F= , P , n)
+Posthock tukey tests indicate that mass of people with brown hair is signficantly less than blue
+ 
+  (less than/ greater than determined from the graph ... Tukey is two tailed) 
+ANOVA -> Tukey test (in that order)
+
+If you incorporated sex into the model of body mass to hair colour...
+
+lm(BM~colour*sex, ...) -> ANCOVA
+
+parallel = nonsignificant
+
+If.... 
+
+sex         0.01
+hair        0.01
+sex*hair    0.01
+
+Hard to tell if there's an effect or sex or hair when there is a signficant interaction
+
+Mean values could be identical... 
+
+Problem: Once you've done the model, can't tell where differences are w/o posthoc
+
+Solution: Tukey, least squares mean/ marginal mean
+
+## Marginal mean
+
+mean controlling for everything else in the model
+  i.e. mean value for M controling for F & interaciton btwn M & F
+  
+Now called marginal means
+
+Calculate then compare
+## ANOVA Day 2
+```{r}
+library(tidyverse)
+library(emmeans)
+library(sjPlot)
+```
+
+```{r factor}
+mod1<- lm(mpg~factor(gear), data=mtcars)
+# traditional way to factor gear
+Fgear<- as.factor(gear)
+# easier way is to make it a factor within the model
+summary(mod1)
+```
+^ gear is a factor
+^ ^ tells us gear 4 vs gear 3 and gear 5 vs gear 3 -> not entirely useful
+
+regression = trend -> continuous
+ANOVA = differences -> categorical
+
+```{r anova}
+anova(mod1)
+```
+^ tells us that gear is significant
+can then go on to see where signficance is 
+
+```{r convert model}
+mod1a<- aov(mod1)
+```
+^ converted the model to an ANOVA so you can run tukey
+```{r tukey}
+TukeyHSD(mod1a)
+```
+^ 5 is not different than 3
+
+note: model signficantly different than null model
+due entirely to difference btwn 4 & 3 (Tukey posthoc)
+-> don't report the p-value (estimate)
+
+```{r diagnostic plot}
+plot(mod1)
+```
+^ residuals, outliers, 
+
+Hook's distance >1 = outlier, <1 = not outlier
+
+  should be 2 SD away from mean -> outliers are within 1.5 SD so that's good
+  
+```{r}
+mod2<- lm(mpg~factor(gear)*factor(cyl), data=mtcars)
+summary(mod2)
+anova(mod2)
+```
+^ F value for gear, cyl, & their interaction
+
+very non-sig -> >0.2
+
+can do 2 things
+  * leave in model -> better predictor (higher R^2)
+  * take out of model -> almost always useful to mae a smaller model b/c more power from smaller factors
+  
+```{r}
+mod2b<- lm(mpg~factor(gear)+factor(cyl), data=mtcars)
+summary(mod2b)
+anova(mod2b)
+```
+^ R^2 goes down 
+
+If you want  a model that's a better predictor, the one w/ the interaction term (leave it in) is better
+
+*caution: over parameterizing* 
+
+Rule of thumb for parameters:
+  * ratio of sample size to parameters (n:p) -> should be greater than 100 as a statistcian, greater than 25 as a biologist
+  * as you decr n/p, taking a data point out of the analysis will have a dramatic effect
+  
+there are ways to double check to make sure it's okay
+Bigger sample size is better 
+
+```{r}
+plot_model(mod2, type ="int")
+```
+```{r marginal mean}
+mtcars$Fgear<-as.factor(mtcars$gear)
+mtcars$Fcyl<-as.factor(mtcars$cyl)
+mod4<- lm(mpg~Fgear+Fcyl, data=mtcars)
+em1<-emmeans(mod4, "Fcyl", by="Fgear")
+plot(em1)
+```
+## ANOVA Day 3
+  * each variable in the model has to be in a separate col
+  * every observation is in a single line
+  * 
+```{r}
+library(Publish)
+library(sjPlot)
+library(tidyverse)
+```
+
+```{r if you cant view a built in dataset}
+View(Diabetes)
+View(Publish::Diabetes)
+data(Diabetes)
+glimpse(Diabetes)
+```
+^ each variable has to be in separate col
+every observaton is in a single line
+Don't need to factor b/c already factors
+
+```{r}
+mod1<- lm(chol~AgeGroups*frame, data=Diabetes)
+```
+^ do you want this to be + or * ?
+  + = age groups & frame separately
+  * = Age + Frame, Age + Frame + Age:frame
+
+^ 3 parameters in this model: Age, Frame, Age*Frame
+  -> satisfies the asumption of sample size:parameter >100
+  -> taking a couple of data points out of the model will have virtually no effect
+  
+Otherwise, overparameterization
+
+2 types of data exploration: exporatory (p hacking) & confirming
+
+```{r}
+summary(mod1)
+```
+^ model is significant -> at least one comparison btwn age groups that is signficant
+^ significant variation in cholesterol levels in this sample
+  F 14, 375 = 2.94, P = 0.003, R^2 = 0.10
+  P-value statistically signficant but not important
+  
+Adjusted r^2 used for comparing models
+```{r}
+mod2<- lm(chol~AgeGroups+frame, data=Diabetes)
+summary(mod2)
+```
+
+```{r}
+anova(mod1)
+```
+^ interaction term not significant
+BUT below criteria of 0.2 -> would leave in b/c having effect
+```{r}
+TukeyHSD(aov(mod1))
+```
+```{r}
+(em1<-emmeans(mod1, "frame", by="AgeGroups"))
+
+plot(em1, comparisons=TRUE)
+```
+
+Interactions b/c differences among frames
+Have some confidence that groups w/ non-overlapping arrows are different
+only revealed by looking @ interactions
+If data not symmetrical, not symmetrical CLs
+Tukey & interaction give slightly different results
+  results more or less the same but this more sophisticated
+  
+#Week 9
+
+Should we really care about a slight difference in p values?
+-> even if they get the same answers?
+
+Pop'n -> sample -> test -> p-value
+
+We put a lot of reliance in p values but they could be wrong
+  -> changes for each sample
+  
+Round the p-value off to the nearest 0.01 or first number after the zeros
+  * p-value based on all assumptions being met
+  * unlikely
+  * crude estimate... all numbers in p value can't be exactly correct
+  
+##GLMM (generalized linear mixed models)
+
+  * errors -> normal, poisson, binomial
+  * predictors -> fixed or random
+  * responses -> categorical, continuous
+  
+  Generalized linear models are the above, minus the randomness
+  General linear models (i.e. t-test, ANOVA, contingency, regression, correlation...) incl. the above minus poisson, binomial, & random 
+  
+random effect = repeated measures of individuals
+
+y=a1+b1x1+b2x2+b3x3+E
+
+y = response, a = intercept, b = slopes (estimates),  x = predictors, E = error
+
+x1, x2, x3 = continuous => multiple regression
+x1, x2, x3 = categorical => ANOVA
+
+##Final 
+
+will give us the output of a model in R
+Q -> what does that mean? interpret this
+
+## Help sessions/ Exam prep
+Mondays week 10 & 11
+
+## sample size
+
+predictors/paramenters = 10-20
+
+if <10-20 -> overfitting
+  
+  removing one data point will change the regression
+  
+If you can't avoid it... 
+
+Calculate minimum adequate model (MAM)
+  -> what is the min model that is good enough to predict
+  
+*Get Ellis's code*
+
+- filter out 0s in sex col for next assignment
+
+```{r}
+library(stargazer)
+library(car)
+library(sjPlot)
+library(tidyverse)
+library(emmeans)
+library(Hmisc)
+```
+
+```{r}
+View(Salaries)
+```
+
+```{r}
+glimpse(Salaries)
+#Response=salary
+#years of service & years since PhD highly correlated
+stargazer(mod1, type="text")
+#summary table of decriptive statistics 
+stargazer(dat1, type="text")
+# controlling for everything, mens salaries higher than womens salaries
+```
+
+1. check variable structure
+  -> change things to facors if necessary
+  -> not necessary here
+  
+2. look at data; plot data
+  -> view(data)
+  -> make sure things aren't messed up (i.e. sex recorded as xxx somewhere, errors in recording)
+  -> pairs(data)
+  -> transform if necessary
+
+3. check for correlations among predictors
+  -> pairs(data)
+  -> look for obvious outliers
+  -> with(data, rrcorr(variable, variable))
+  -> 
+```{r}
+with(Salaries, rcorr(yrs.since.phd,yrs.service))
+```
+4. build model
+  -> lm(data~variable...)
+  
+```{r}
+mod1<- lm(salary~sex*yrs.since.phd+discipline, data=Salaries)
+summary(mod1)
+anova(mod1)
+```
+
+5. check assumptions
+  -> plot_model(mod, type="diag")
+```{r}
+plot_model(mod1, type="diag")
+```
+  -> variation inflation facotrs not tolerable
+  -> but we know there's not a problem... because they're correlated
+  -> can't pay attention to this plot if they're correlated
+  -> normal QQ fits a pretty straight line -> residuals are good
+  -> don't want to take things out of model b/c interaction terms significant
+  
+Is there an effect of sex?
+Yes -> 
+```{r}
+em1<- emmeans(mod1, "yrs.since.phd", by="sex")
+plot(em1)
+```
+^ not a great plot b/c continuous variable... 
+@ mean value, plotted what 2 salaries are @ mean value of years since phd
+```{r}
+em1<- emmeans(mod1, "discipline", by="sex")
+plot(em1)
+```
+^ bigger change in male salary ... females have a smaller change than males do
+
+```{r}
+plot_model(mod1, type="int")
+```
+
+Predict what salaries should be
+```{r}
+predict(mod1, sex="Female", yrs.since.phd="10")
+```
+^ just want the value at 10.. 
+
+confidence limits around a regression lines means that the possible regression line lines within that area, all lines drawn in there possible
+different than cofidence of predicted value (prediction limits)
+
+#Week 10
+
+- no formal class Monday of week 12 (will be drop in for questions)
+
+Anova function can be used to compare 2 models:
+mod1: Y1~X1
+mod2: Y1~X1+X2+X1:X2
+mod3: Y1~X1+X2
+  -> compare: anova(mod2, mod3)
+  
+if no significant difference... can take out X1:X2 from the model
+if you had way more factors in a complex model, have to take them out one at a time
+
+What if you took out X1:X2, how do you decided which to keep in? X1? X2?
+-> don't just determine which one is more significant than the other... 
+
+```{r mt cars model}
+mod1<- lm(mpg~drat+hp, data=mtcars)
+summary(mod1)
+```
+^ two significant predictors in this model... 
+Which is more important?
+Model shows that the slope for hp controlling for drat is shallow but the slope for drat controlling for hp is steep
+
+^ there is a 10 fold difference btwn changes
+
+We want to know which difference is relatively greater
+
+both axel ratio & horse power are significant but which one is more important/ has a bigger effect?
+
+Need to put them on the same scale
+
+Just looking at the p value only tells you if the slope is significantly different than 0... not the influence of the variable
+
+Need to scale the variables
+
+```{r scale by SD}
+mod1<- lm(mpg~scale(drat)+scale(hp), data=mtcars)
+summary(mod1)
+```
+
+^ scales by standard deviations
+what is the effect of one SD change in drat compared to one SD change in hp?
+Comparing on the same scale allows us to tell which has a bigger effect
+
+hp has a bigger (-ve) effect than drat
+indicates changes in hp have a bigger effect on mpg than changes in axel ratio
+
+Interpretation btwn two models is different
+
+need to make model w/o scale to see numeric change, w/scale tells you relative change
+
+  * *don't scale y-values* 
+  * *x-values are scaled by SD*
+  * *you can only scale continuous variables*
+  
+Full model:
+mod1<- y~x1+x2+x1:x2
+  the more you add the more complex the model
+  
+Simple model:
+mod2<- y~x1+x2
+mod3<- y~x1
+mod4<- y~x2
+
+Null model:
+mod5<- y~1 
+
+Which one is the best?
+  -> any one of these might be best... best is relative term
+  might be the fewest predictors for significant model
+  might be the one w/ the highest % variance explained (R^2)
+  might be the one w/ the highest R^2 which are not affected by adding other variables (smallest)
+  smallest AIC (Aikake's information criteria)
+  if I take something out of the model... does it have a significant effect on the F value?
+ 
+```{r determine best model}
+mod2<- lm(mpg~hp+drat+hp*drat, data=mtcars)
+summary(mod2)
+step(mod2)
+```
+^ step thru from most to least complex or opposite
+stop when you meet model that is the best
+
+if variables are correlated, starting from bottom or top could affect your results
+default is downward so we're doing that
+
+looking for model w/ lowest AIC
+
+Stops when it cant' take out anything else 
+
+Scaling the variables doesn't affect the results of the model
+
+```{r}
+mod1<- lm(mpg~wt, data=mtcars)
+summary(mod1)
+```
+^ highly significant
+for every increase in units of weight (thousands of kg), you lose 5.3 mpg
+
+If you scale the predictors, the interpretation is different...
+  -> applicable to SD of weight (not 1000kg)
+  -> in this case, for every change in 1 SD of weight, there will be a change in mpg by 5.2
+  -> not always close like this... happens in this case because a SD must be close to 1000
+```{r scale weight}
+mod2<- lm(mpg~scale(wt), data=mtcars)
+summary(mod2)
+```
+  
+If you had kg instead of 1000s kg, the scale of the weight would have been measured in the thousands, vs hp may range from 1-6
+-> very different scale
+scaling helps determine what a SD change effects the response
+
+One is not better than the other, scaling just helps make comparisions on the same scale between 2 predictors of different units
+
+Doesn't tell you what a change in unit weight is
+
+scaling useful for comparing predictors, not scaling useful for interpretation
+
+```{r predicted value}
+mod3<- lm(mpg~hp+am+wt, data=mtcars)
+summary(mod3)
+new3<- data.frame(wt=2.6, hp=125, am=1)
+predict(mod3, new3, interval="prediction")
+```
+^ gives you predicted values w/ upper & lower confidence intervals
+  
+Allows you to get predciton w/o plugging into a formula
+
+Handy -> get predictions & measure of margin of error/ how accurate that prediction is
+
+A bigger sample size of the whole model would make smaller CI
+
+## CL in regression
+
+```{r}
+confint(mod1)
+```
+
+^ use confidence limits to tell if you have a significant regression
+
+If CL are wide, they could also include the 0 regression -> non-significant 
+If model non-significant, that means CL of regression contain the 0 slope line
+
+prediction limits are not the same as CL of the regression
+Don't be tempted when doing prediction from model to write confidence ... 
+If you're interested in making a prediciton, use prediction limits, not confidnece limits
+prediction limits are confidence limits of the prediction
+
+Don't use the following code:
+```{r}
+predict(mod3, new3, interval="confidence")
+```
+
+Do use:
+```{r}
+predict(mod3, new3, interval="prediction")
+```
+
+## for assignment
+
+1. design a model -> think about the model & what you want to predict... although you don't know what the predictors are
+  * i.e. mpg~x1*x2*x3*...*x12
+  * consider n -> acceptable # paramemeteres
+  * interactions?
+  * correlations?
+  * biology?
+  * question?
+  -> once you've designed this, it is the full model
+2. run full model, test assumptions
+  * make assumptions fit
+  * judement call about whether assumptions met
+  * will not be met in assignment
+  * make sure outliers aren't too crazy, residuals aren't wonky, etc.
+3. reduce model to MAM
+  * use step function -> chooses MAM for you
+4. run MAM 
+  * don't have to test assumptions agian... might accidentally add stuff back in
+5. interpret what results mean
+  * is model significant?
+  * what is the strength of the predictors?
+  * most significant response?
+6. predict
+
+## exam review
+
+Question 2
+
+Reporting results...
+
+... 39% (R^2=0.39)... (F6,107=11.5, P<0.0001, n=115 species of dinosaur) ... 
+Height and length have biggest effect (scaled height= ... scaled length=... t=... p=...)
+    
+Beta is slope of regression... these estimates are all slopes
+standardized beta is the standardized slope of regression
+
+Height (std beta= ... p=...) and length (std beta=... p=...) have the biggest effect
+
+Is this a significant regression? How do you know? 
+  * no, b/c a slope of 0 fits in the CL 
+How could this analysis be imporoved so that assumptions are not violated??
+  * remove outliers... but shouldn't be your first choice
+  * transformation first (maybe log)
+  * can do analysis w/ & w/o outliers after transforming to see if big effect
+How could this study be improved to reveal a pattern that is statistically significant? 2 ways
+  * bigger sample size
+  * change value of alpha... would make significant
+  * collect data more carefully
+  * add more predictors
+  
+# Week 11
+
+## Midterm review
+
+-> will change things in the question like slope or MC options etc. 
+-> will still be asking the same qustion
+
+-> be familiar of everything in the textbook
+
+1. what is the slope of this regression?
+
+## example 
+If you added a parameter to the x-value, r^2 would go up
+If the factor is a good predictor, the residuals go down 
+
+Marginal ... 
+
+  * look @ body mass controlling for height & height controlling for body mass
+  * seems logical biologically that both would be +ve slopes against bad cholesterol
+  
+  -> when you control for the other variable you don't know what's going on...
+  marginl plots show bad cholesterol predicing body mass controlling for height, etc
+  can't tell from original plot what it wil look like
+  have to run the analysis & see what happens
+  
+  y=a+b1x1+b2x2
+  
+  - b is the estimates
+  - slope if continuous variable
+  - baseline if categorical
+  
+  -> possible that within each sex the relationship is negative but across it's positive
+  - if you look @ marginal values -> sex controlling for BM & height ... plots different, values could change
+  - controlling for BM & height, the effect of sex on bad chol not very much once you control for those variables
+  
+  - *controlling* for things might look very different than just plotting it against the response
+  
+## Midterm questions
+
+1. a) is this a significant regression? How do you know ?
+  - No, you could draw a line of zero slope 
+  b) prediction limits
+  - almost always stragiht line
+  - biggest
+  - confidence limits red... smaller, curved
+  - 95% of the 21 data values should be in the 95% prediction
+  c) prediction limits are the confidence limits on the prediction
+  Is it possible that the slope on y & x is actually negative
+  - possible -> could draw a negative line within those limits
+  
+2. A) how could you improve this graph?
+  - regression line can't be drawn beyond the data
+  - 
+  
+3. A) what's the equation for this regression line?
+  - y=5+0.166x
+  - 5 = where regression crosses y axis
+  
+4. A) is the dark or light shading the 99% CL of these regressions?
+  - wider = more confidence real regression line is in that space... it's the lighter
+  B) which species has the higher slope?
+  - red 
+  - 2 pieces of information... slopes & CI
+  - not good evidence that they are significanty different
+  C) are the lsopes likely to be sig diff @ P<0.01?
+  - no b/c lower slope of red likely to be same as higher slope of blue
+  
+mpg~am+hp => affect of am holding hp constant or affect of hp holding am constant
+
+If you interested in comparing effect of these things... might be interested in comparing, across whole range, what is effect of comparing manual & automatic ?
+-> across range of horsepower, there's a bigger effect on mpg than across the range of transmisions
+
+-> the effect of one is smaller than the effect of the other
+
+Contingency table -> is there a correlation btwn guess & observed
+-> Fisher's exact test 
+    * what's the probability of observing those values based on the bioniomal distribution predicted results
+    * looked @ all possibilities
+    
+```{r}
+counts1<- data.frame(
+  first=c("M","T","M","T"),
+  guess=c("m","m","t","t"),
+  freq=c(3,1,1,3)
+  )
+counts1
+counts2<-data.frame(
+  first=c("M","T","M","T"),
+  guess=c("m","m","t","t"),
+  freq=c(30,10,10,30)
+  )
+```
+^ want to conver thtis table into contingency table
+use cross tabulation (an R function)
+
+```{r make contingency table}
+t1<- xtabs(freq~first+guess, data=counts1)
+t1
+t2<- xtabs(freq~first+guess, data=counts2)
+```
+Test the significance
+```{r fisher test}
+fisher.test(t1)
+```
+^ p value = 0.49 -> there's no evidence of an association btwn predicted t & observed t
+
+What's wrong with the experiment? -> looks like she guessed right but the p value says no (no signficant association btwn truth & what she guessed).. or in other words, by the null model, the guesses aren't true
+
+Null hypothesis: the guesses are a non-random distribution of numbers that would lead to the marginal values
+-> i.e. no association btwn truth & guess
+
+same purpose of analysis as chi square
+```{r chi square}
+chisq.test(t1)
+```
+^ quite unreliable for small sample size
+
+Binomial is discrete but chi distribution is continuous
+
+Note: p value almost identical -> kind of equivalent
+
+In general: fisher test is better test for small sample size
+
+Continuity correction for small samples
+
+report chi square & p value 
+
+w/ this sample size there is a significant associate btwn what lady guessed & the truth 
+
+```{r}
+mosaicplot(t2, shade=TRUE)
+```
+
+Expected values are given marginal values, what would you expect in these cells given the distribution is random
+```{r}
+mosaicplot(t1, shade=TRUE)
+```
+^ all white b/c not different from expected
++ve are solid line around box, -ve is dashed line 
+
+only colours if significantly different from expected
+
+
+```{r calculate expected & residuals}
+c1<- chisq.test(t1)
+c1$expected
+c1$residuals
+```
+
+Bigger the residual the mroe contribution it's making
+
+```{r prop table}
+prop.table(t1)
+```
+^ shows proportion of correctly guessing for each guess
+
+can be more useful for reporting to the reader... makes it more explainable/ intuitive
+
+add up mm & tt => % of time she made the correct guess
+-> this is significant (based on chi sq. test or fisher test)
+
+Kelvin : 0 -> 273 -> 10^14
+deg Celcius : 0 <-> 100
+Farenheight : 0 <-> 100
+
+AIC -> cycles thru models & stops @ the lowest
+  -> like temperature scales.. 
+  -> the lowest number is important, not the actual number
+  
+## contingency table
+
+Is there an association btwn prey & predator?
+i.e. there's a significant difference among predators in the prey they eat
+
+```{r}
+counts1<- data.frame(
+  Pred=c("RTH","RTH","RTH","RTH","Pere","Pere","Pere","Pere","Merl","Merl","Merl","Merl","Kest","Kest","Kest","Kest"),
+  Prey=c("S","W","P","D","S","W","P","D","S","W","P","D","S","W","P","D"),
+  Freq=c(6,2,27,14,12,1,36,5,22,13,0,1,13,21,0,3)
+)
+counts
+t1<- xtabs(Freq~Pred+Prey, data=counts1)
+chisq.test(t1)
+## highly significant
+mosaicplot(t1, shade=TRUE)
+```
+^ might be saying incorrect b/c not close to binomial distribution
+
+close approximation to pvalue
+
+increasing sample size would help
+
+Mosaic plot helps us pinpoint where differences are
+
+tells us that biggest contribution to differences is KES eating warblers
+
+can divide up contingency table however you like & analyze
+  -> recast as two by two table
+  
+```{r}
+counts2<- data.frame(
+  Pred=c("Hawks","Hawks","Falcons","Falcons"),
+  Prey=c("Big","Little","Big","Little"),
+  Freq=c(34,42,42,48)
+)
+t2<- xtabs(Freq~Pred+Prey, data=counts2)
+chisq.test(t2)
+mosaicplot(t2, shade=TRUE)
+```
+
+```{r}
+counts3<- data.frame(
+  Pred=c("P","P","R","R"),
+  Prey=c("s","w","s","w"),
+  Freq=c(12,1,6,2)
+)
+t3<- xtabs(Freq~Pred+Prey, data=counts3)
+chisq.test(t3)
+mosaicplot(t3, shade=TRUE)
+## trying to narrow down where something interesting is going on
+fisher.test(t3)
+```
+
+-> fisher exact test is not an approximation -> it's exact!
+-> chi square giving you an approximate p 
+Fisher test is prefered if you can run it
+
+in the assignment, one is significant & the other is not

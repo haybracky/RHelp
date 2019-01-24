@@ -1,0 +1,264 @@
+---
+title: "Week3"
+output: html_notebook
+---
+
+# Preamble
+
+This notebook contains class notes from week 3 for BIOL 432
+
+# Graphics
+
+```{r}
+install.packages(c("ggplot2", "rmarkdown", "knitr"))
+```
+Vector vs Raster format
+
+Vector: SVG, PDF, EPS, AI, PS
+
+Raster: JPEG, PMG, TIFF, BMP
+
+Raster images are coded as circles
+
+Vector graphics are coded as vectors w/ lines & points
+
+important for graphics b/c if you zoom on a raster photo, it gets pixelated but if you zoom on a vector photo it stays the same
+
+Best to use vector format for graphs (some cases you can't avoid it... like a map or image that's already coded in raster format)
+
+Can easily convert from vector to raster w/o losing much info but difficult to convert from raster to vector
+
+Pixel dimension = physical size x resolution 
+
+  dpi is resolution 
+  
+  as pixel dimension incr, the larger the file size
+  
+RGB vs CMYK
+
+RGB = screens, red green blue, every pixel can produce one of each colour 
+
+CMYK = printed, cyan magenta yellow shading 
+
+careful making graphics b/c printing will produce cmyk 
+
+Adobe packages have CMYK preview, or stick to primary colours
+
+Graphics software
+
+Don't use powerpoint for publication
+
+  * Adobe photoshop / GIMP (pixel)
+  * Adobe illustrator / Inscape (vector)
+
+```{r ggplot}
+library(ggplot2)
+?ggplot2
+
+# two main functions
+
+# qplot -- for basic plots
+## qplot(x=, y=, data=)
+
+# ggplot -- for advanced functions
+
+# want to use relative path name
+getwd()
+
+MyData<- read.csv("data/FallopiaData.csv") # put folder name in front to find it
+
+qplot(x=Total, data=MyData) # creates frequency histogram of binned data for continuous variable
+
+qplot(x=Scenario, data=MyData) # creates frequency histogram of each categorical level
+
+qplot(x=Silene, y=Total, data=MyData) # creates scatterplot of Silene biomass to Total biomass
+# note: slight trend which makes sense b/c Silene biomass is included in total biomass
+# never do a stat test on two variables that include the same measurement
+
+qplot(x=Nutrients, y=Total, data=MyData) # plots total biomass separated into 2 nutrient levels
+
+qplot(x=Nutrients, y=Scenario, data=MyData) # categorical x categorical just shows the occurence of each combination
+```
+  
+```{r Customizations in ggplot}
+# binwidth changse bin size for histograms
+qplot(x=Total, data=MyData, binwidth=10, breaks=seq(20,90,10)) # bins get wider, each bar contains wider range of points
+
+# group for subsets of data
+qplot(x=Silene, y=Total, data=MyData, 
+      colour=Nutrients) # assigns diff colours to the diff nutrients levels
+
+qplot(x=Silene, y=Total, data=MyData, 
+      colour=Nutrients, size=Total)
+
+qplot(x=Silene, y=Total, data=MyData, 
+      colour=Nutrients, size=5)
+qplot(x=Silene, y=Total, data=MyData, 
+      colour=Nutrients, size=10) # circle sizes are staying the same... R is assigning the same value
+
+qplot(x=Silene, y=Total, data=MyData, 
+      colour=Nutrients, size=I(5)) # using I= the identity function, tells R that you want to assign the size the value of 5
+
+qplot(x=Silene, y=Fallopia, data=MyData,
+      colour=Nutrients, colour=I("purple"))
+
+qplot(x=Silene, y=Fallopia, data=MyData,
+      colour=Nutrients, colour=I(rgb(0.5,0,1))) # use values from 0-1 to tell it how much of each colour, rgb to use
+
+# use coolors to generate colour patterns
+## produces hexadecimal code, copy into R
+qplot(x=Silene, y=Fallopia, data=MyData,
+      colour=Nutrients, colour=I("#5bc0eb"))
+
+# colours for hisograms have parameters:
+## colour and fill
+qplot(x=Total, data=MyData, colour=Nutrients) # this just gives outline
+qplot(x=Total, data=MyData, fill=Nutrients) # this fills the bars
+
+# change position with posit
+qplot(x=Total, data=MyData, fill=Nutrients, posit="dodge")
+
+# use alpha to add transparancy
+qplot(x=Silene, y=Fallopia, data=MyData,
+      colour=Nutrients, size=Total, alpha=I(0.3))
+
+# shape of points
+qplot(x=Silene, y=Total, shape=Nutrients, data=MyData)
+
+qplot(x=Silene, y=Total, shape=I(21), data=MyData) # uses shape number 21
+
+# some shapes have borders so we can use fill 
+qplot(x=Silene, y=Total, shape=I(21), fill=I("yellow"), colour=I("red"), data=MyData)
+
+qplot(x=Silene, y=Total, shape=I(21), fill=I("yellow"), colour=I("red"), size=I(3), alpha=I(0.3), data=MyData)
+
+# xlab and ylab to label axes
+qplot(x=Silene, y=Total, data=MyData,
+      xlab="Silene biomass (mg)", ylab="Total Biomass (mg)", main="Biomass")
+
+qplot(x=Silene, data=MyData)
+
+qplot(x=Silene, data=MyData) +
+      theme_bw() # this changes the background theme
+qplot(x=Silene, data=MyData) +
+      theme_classic() # this theme uses minimal ink (Rob's fave) -> less distraction from the figure
+
+# making functions with functions() -> custom theme
+theme_pubworthy<- function(){
+  theme_classic() %+replace%
+    theme(
+      panel.border=element_blank()
+    )
+}
+
+qplot(x=Silene, data=MyData) +
+  theme_pubworthy()
+
+# tutorial has description on how to make theme w/ big clear text 
+
+# geom = for diff graph options
+qplot(x=Nutrients, y=Total, data=MyData, geom="boxplot") # this shows data as a boplot 
+qplot(x=Nutrients, y=Total, data=MyData, geom="violin") 
+# can find more about this @ docs.ggplot2.
+qplot(Total, data=MyData, geom="density")
+
+qplot(Total, data=MyData) # dont always have to put x=, y=
+
+# multiple graphs w/ facets
+## .~.
+qplot(x=Silene, data=MyData, facets=Nutrients~.) # stacks on top
+qplot(x=Silene, data=MyData, facets=.~Nutrients) # stacks side by side
+qplot(x=Silene, data=MyData, facets=Taxon~Nutrients) # breaks into 4 graphs for each comb of Taxon x Nutrients
+
+# make graph into pdf -> keep in vector form
+pdf("FalloData.pdf") # create & opens a pdf
+qplot(x=Silene, data=MyData, facets=Taxon~Nutrients)
+dev.off() # closes pdf
+## you must run these ALL TOGETHER
+
+pdf("FalloData2.pdf", width=10, height=8) 
+qplot(x=Silene, data=MyData, facets=Taxon~Nutrients)
+dev.off() # this graph is wider
+# but, this changed the font size. you may want to play around with theme
+
+
+```
+
+Keep the messsage clear, produce an image that can be read with as little distraction as possible
+
+docs.ggplot2.org
+
+DataDryad.org -> where ecologits post datasets
+
+downloaded file from Rob's paper (2015)
+
+```{r Dryad Dataset}
+SelData<- read.csv("https://datadryad.org/bitstream/handle/10255/dryad.82839/Selection_Data.csv?sequence=1") # uploads data straight from dryad 
+SelData
+names(SelData)
+
+SelData<- SelData[,c(7,11)] # pull out col 7 & 11
+names(SelData)<- c("Native", "s")
+SelData$s<-abs(SelData$s) # makes it all >0 (absolute value)
+
+qplot(s,data=SelData,fill=Native, posit="dodge") 
+
+ggplot(aes(x=s, fill=Native), data=SelData) +
+  geom_bar() # aesthetic function sets up the data to be used & passes it onto the function you give it
+
+P<- ggplot(aes(x=s, fill=Native), data=SelData) +
+  geom_bar() # puts the ggplot into an object
+
+print(P)
+
+# put the ggplot(aes()) into an object then do diff plots to it
+P<- ggplot(aes(x=s, fill=Native), data=SelData)
+P + geom_bar()
+
+P + geom_freqpoly() + geom_bar()
+
+P2<- P + geom_bar() + geom_freqpoly()
+P2 + scale_x_continuous(limits=c(0.1,5))
+```
+
+Markdown language created to avoid error making an html 
+
+[square brackets for linked text] (https://datadryad.org/resource/doi:10.5061/dryad.gt678)
+
+Add images with ![Image caption](28977.gif)
+
+Tables:
+
+Table Title
+---------------
+
+Column 1 | Column 2  | Column 3
+---------|-----------|----------
+A        |     B     | C
+D | E | F
+G | H | I
+
+```{r}
+library(dplyr)
+
+Fallo<- read.csv("data/FallopiaData.csv")
+
+SumTable<- Fallo %>%
+  group_by(Taxon, Scenario, Nutrients) %>%
+  summarize(Mean=mean(Total), SD=sd(Total)) %>%
+  arrange(desc(Mean))
+
+print(SumTable)
+```
+
+```{r}
+library(knitr)
+kable(SumTable, caption="Summary table")
+```
+^ this makes a prettier table
+
+```{r}
+library(ggplot2)
+qplot(x=Total, data=Fallo)
+```
+
