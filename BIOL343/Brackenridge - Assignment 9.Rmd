@@ -1,0 +1,91 @@
+---
+title: "Brackenridge - Assignment 9"
+author: "Hayley Brackenridge"
+date: '2018-03-21'
+output:
+  word_document: default
+  html_document: default
+---
+
+#Preamble
+
+This markdown contains Assignment 9 for BIOL343. The assignment uses the dataset eyecolorgenderdata.csv to figure out what influences the number of hours that young adults spend watching tv. 
+
+  - hours spent on computer 
+  - exercise
+  - sex
+  - computer time * sex
+  
+predict how many hours my 23-year-old son is likely to spend watching TV. He  spends 20 hours a week on his computer and gets no exercise.
+
+1. Which of those variables has the largest effect on the amount of TV that a child watches? Explain briefly how you determined this.
+2. Which sex watches more TV, controlling for the other variables? Explain briefly how you figured this out.
+3. How much TV would your model predict that my son would be likely to watch (with confidence limits on that prediction)?
+4. How much of the variation in TV watching does your MAM explain? 
+```{r load packages}
+library(tidyverse)
+library(ggplot2)
+library(Publish)
+library(dplyr)
+
+```
+
+```{r}
+dat<- read.csv("eyecolorgenderdata.csv")
+dat<- dat%>%mutate(gen=gender, comp=computertime, ex=exercise, tv=watchtv)
+mod1<- lm(tv ~ gen*comp*ex, data=dat)
+plot_model(mod1, type="diag")
+summary(mod1)
+# significant interaction btwn gender and computer time and computer time and exercise
+## leave these in plot
+mod2<- lm(tv~gen+comp+ex+comp*gen+comp*ex, data=dat)
+plot_model(mod2, type="diag")
+# not a good model
+## try transformation 
+dat1<- dat%>%mutate(logcomp=log10(comp+1))
+mod3<- lm(tv ~ gen + logcomp + ex + gen*logcomp + logcomp*ex, data= dat1)
+step(mod3)
+# the best model is tv~gen+logcomp+ex
+mod4<- lm(formula = tv ~ gen + logcomp + ex, data = dat1)
+plot_model(mod4, type="diag")
+plot(mod4)
+summary(mod4)
+mod4
+# this is a better model
+
+# which variable has the largest effect
+confint(mod4)
+## gender has the greatest effect since the slope has the narrowest confidence intervals and therefore the regression is more significant
+
+# which sex watches more tv?
+boxplot(tv~gen,data=dat1,ylim=c(0,30))
+## this shows no statistical difference btwn males and females
+
+# how much tv would his son watch?
+log10(20)
+new=data.frame(gen="male", ex="No", logcomp=1.30103)
+predict(mod4, new, interval="prediction")
+## his son is predicted to watch about 12 hours of tv
+
+# how much variation in tv watching does the MAM explain?
+summary(mod4)
+## R^2 = 0.02873 -> there is 2.87% variance explained by the model
+```
+
+# Questions 
+
+1. Which of those variables has the largest effect on the amount of TV that a child watches? Explain briefly how you determined this.
+
+Gender has the greatest effect on the amount of tv a child watches. This was determined by looking at the confidence intervals on the slope of the model. Using the function confint(), it can be seen that gender has the greatest slope and narrowest confidence intervals, making it the most statistically signifiant. 
+
+2. Which sex watches more TV, controlling for the other variables? Explain briefly how you figured this out.
+
+Males watch more tv than females, controlling for the other variables. This difference is only an average and it can be seen that the difference is not statistically supported by noting the overlapping error bars (Figure 1). 
+
+3. How much TV would your model predict that my son would be likely to watch (with confidence limits on that prediction)?
+
+Using the function predict(), it can be see that Dr. Montgomerie's son would likely watch about 12 hours of tv (UCL=27.88, LCL=-3.89). Based on the wide confidence interval this is not an accurate 
+
+4. How much of the variation in TV watching does your MAM explain? 
+
+The model explains 2.87% of the variation in tv watching (R^2=0.02873). This is very low, therefore it is not a very good predictor of tv watching. 

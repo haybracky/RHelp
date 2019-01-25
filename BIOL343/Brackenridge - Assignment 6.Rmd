@@ -1,0 +1,112 @@
+---
+title: "Brackenridge - Assignment 6"
+author: "Hayley Brackenridge"
+date: '2018-03-01'
+output: html_document
+---
+
+#Preamble
+
+This notebook contains Assginment 6 for BIOL343. The assignment involves analysis of the file fastfood.csv.
+
+*Assignment description:*
+
+I am a consultant for a marketing company that is working for some fast-food chains in Oregon and California. They have asked me to analyze some data collected from 387 of their stores so that they can make some intelligent marketing decisions. I am sub-contracting you, the statistician (data analyst) to provide me with the answer to the question below. I don’t know much about statistics so I want you to explain clearly to me how to report and explain your findings to my client while still providing me with all of the statistical details.
+
+*Question:* Does the starting salary of employees depend upon the state and the sex of the manager? What can I conclude from your analysis. Provide me with a graph or two so that I can illustrate this result. Write a couple of pariahs to explain what you did and how I should report your analyses in my report.
+
+```{r}
+# load packages
+library(sjPlot)
+library(Publish)
+library(tidyverse)
+library(gvlma)
+
+# load dataset
+dat<- read.csv("fastfood.csv")
+glimpse(dat)
+
+# change manger sex, chain, and state to factors
+dat$msex<- as.factor(dat$MGRSX)
+dat$chain<- as.factor(dat$CHAIN)
+dat$state<- as.factor(dat$STATE)
+glimpse(dat)
+# subset by chains
+C1<- filter(dat, chain=='1')
+C2<- filter(dat, chain=='2')
+C3<- filter(dat, chain=='3')
+C4<- filter(dat, chain=='4')
+
+# chain 1
+# look for interactions btwn manager sex & state by running interaction plot
+mod1a<- lm(STARTWAGE~msex*state, data=C1)
+plot_model(mod1a, type = "int")
+summary(mod1a)
+## p-value: 0.753 -> insignficant interaction
+## there is no interaction btwn manager sex & state therefore we can group the variables
+# model wage against manager sex & state
+mod1b<- lm(STARTWAGE~msex+state, data=C1)
+# test assumptions by running a diagnostic plot
+plot_model(mod1b, type = "diag")
+# test global validationof linear models assumptions
+gvlma(mod1b)
+## Satisfied: kurtosis, link function
+## Not satisfied: global stat, skewness, heteroscedasticity
+## the p-value cannot be trusted
+plot(mod1b)
+## there are several outliers affecting the test assumptions. P values should be viewed with caution
+summary(mod1b)
+## r^2 = 0.003801 -> low % variance explained
+
+# repeat for chain 2
+mod2a<- lm(STARTWAGE~msex*state, data=C2)
+plot_model(mod2a, type = "int")
+summary(mod2a)
+## p-value: 0.009382 -> signficant interaction
+## there is an interaction btwn manager sex & state therefore we cannot group the variables
+plot_model(mod2a, type = "diag")
+gvlma(mod2a)
+## Satisfied: Skewness, kurtosis, link function
+## Not satisfied: global stat, heteroscedasticity
+## the p-value cannot be trusted
+plot(mod2a)
+## there are a few outliers affecting the test assumptions. P values should be viewed with caution
+summary(mod2a)
+## r^2 = 0.1484 -> low % variance explained
+
+# repeat for chain 3
+mod3a<- lm(STARTWAGE~msex*state, data=C3)
+plot_model(mod3a, type = "int")
+summary(mod3a)
+## p-value: 0.1391 -> significant interaction 
+## there is an interaction btwn manager sex & state therefore we cannot group the variables
+plot_model(mod3a, type = "diag")
+gvlma(mod3a)
+## Satisfied: Global stat, skewness, kurtosis, link function, heteroscedasticity
+## p-value should be okay
+plot(mod3a)
+## there are a few outliers. the data do not follow the normal Q-Q. This affects the validity of the p-value
+summary(mod3a)
+## r^2 = 0.06367 -> low % variance explained 
+
+# repeat for chain 4
+mod4a<- lm(STARTWAGE~msex*state, data=C4)
+plot_model(mod4a, type = "int")
+summary(mod4a)
+## p-value: 0.004168 -> significant interaction
+## there is an interaction btwn manager sex & state therefore we cannot group the variables
+plot_model(mod4a, type = "diag")
+gvlma(mod4a)
+## Satisfied: Skewness, kurtosis, heteroscedasticity
+## Not satisfied: Global stat, link function
+## p-value should be okay
+plot(mod4a)
+## there are a few outliers affecting the test assumptions. P values should be viewed with caution
+summary(mod4a)
+## r^2 = 0.2266 -> low to moderate % variability explained
+```
+
+
+For every chain, the starting salary of employees is minimally effected by manager sex and state. For Burger King, there is not a statistically supported interaction between manager sex and state (P>0.2) therefore we can group the variables and plot the effects of starting salary of employees against the combination of manager sex and state as a single predictor. Running a diagnostic plot on this new model (line 50), it can be seen that predictors are correlated therefore the prediction of one variable by the other variables is very accurate, however, residuals do not follow a normal distribution and the variance of residuals is not equal or randomly spread. Testing the assumptions of linear models (line 52), it can be seen that kurtosis and link function are satisfied, while heteroscedasticity, global stat, and skewness are not. This means that the assumptions required for valid conclusions to be drawn from the model are not satisfied and therefore the p-value for the model (line 58) should be interpreted with caution (F 2,149 = 0.2843, n = 3, P < 0.001). The percent variability in employee starting salary explained by manager sex and state is r^2=0.3%, therefore there is a small effect. 
+
+For KFC, Roy Rogers, and Wendy's, there is a signficant interaction between manager sex and state (P<0.2) therefore we cannot group the variables or draw any conlcusions on their effect on starting salary of employees. 

@@ -1,0 +1,79 @@
+---
+title: "Brackenridge - Assignment 7"
+author: "Hayley Brackenridge"
+date: '2018-03-08'
+output: html_document
+---
+
+#Preamble:
+
+This markdown contains assignment 7 for BIOL343. The assignment answers the following question using the dataset peanuts.csv
+
+#Question
+
+Do both pressure and temperature affect solubility? Which one has the biggest affect (do we get the biggest increase in solubility by paying attention to the temperature or the pressure, or both)? What reasonable conclusions can I make from your analysis?
+Provide me with a graph or two so that I can illustrate this result, and explain what the graphs show. Write a couple of paragraphs to explain what you did and how I should report your analyses in my report.
+
+```{r load packages}
+library(sjPlot)
+library(gvlma)
+library(tidyverse)
+library(emmeans)
+library(Publish)
+```
+
+```{r load dataset}
+data<- read.csv("peanuts.csv")
+glimpse(data)
+```
+
+```{r data analysis}
+# press and temp are integers -> make the factors
+data$Fpress<- as.factor(data$press)
+data$Ftemp<- as.factor(data$temp)
+glimpse(data)
+
+# set up a model of solubility vs pressure interacting with temperature
+mod<- lm(solubility~Fpress*Ftemp, data=data)
+summary(mod)
+## since p<<<0.2 there is a significant interaction between temperature & pressure -> we must leave them in the model
+
+# check that the model fits assumptions
+plot_model(mod, type="diag")
+gvlma(mod)
+## all assumptions are met
+
+# perform Tukey HSD to determine if there is variability
+TukeyHSD(aov(mod))
+## statistically significant difference in solubility under high pressure + high temperature compared to all other treatments
+## p<<<0.0001
+
+# evaluate the variability
+em<- emmeans(mod, "Ftemp", by="Fpress")
+
+# Figure 1
+plot(em, comparisons=TRUE)
+## the treatment Pressure = 1 with Temperature = 1 is significantly different than the other treatments
+## therefore high pressure and high temperature produce a difference in solubility that is statistically signficant 
+
+# determine which factor has the greatest influence
+summary(mod)
+## adjusted R^2 = 0.973, p-value = 2.975e-10
+## important & signficant
+mod1<- lm(solubility~Ftemp, data=data)
+summary(mod1)
+## adjusted R^2 = 0.3325, p-value = 0.0114
+## important & signficant
+mod2<- lm(solubility~Fpress, data=data)
+summary(mod2)
+## adjusted R^2 = 0.3023, p-value = 0.016
+## important & signficant 
+
+## temperature and pressure together have the most statistically significant effect on solubility as well as the greatest R^2 value (% variance explained) therefore the effects of pressure and temperature together on solubility are the greatest
+```
+
+##Explanation
+
+It was found that the interaction of pressure and temperature have the greatest effect on the solubility of oil in CO2. This conclusion is statistically signficant (p<0.001) and meaningful (R^2=0.973). It was found that 97% of the variation in solubility could be explained by high pressure and high temperature combined. This % variation explained (R^2) has been adjusted to account for the number of variables in the model, making it more accurate. 
+
+To determine that the combination of high pressure and high temperature has the biggest effect on solubility, we needed to transform the variables pressure and temperature to be factors. This allows the variables to be used in a model. Next, a model of solubility against temperature and pressure (interacting) was fitted. We start with this model because it is not known whether the interaction of pressure and temperature are having an effect on solubility or just the variables on their own. You can see in the summary that P<0.2 therefore the interaction between pressure and temperature is significant. We must therefore leave the interaction term in the model. We then run a diagnostic test to check that the assumptions are met for the data and the model is valid. gvlma says that all assumptions are met, therefore the model does not need to be transformed and accurate conclusions can be drawn from it. From this, we run a TukeyHSD test to determine where there is significant variation among treatments. The Tukey test shows that there is a statistically significant difference in solubility under high pressure and high temperature compared to all other treatments. This result is not directional. Next, we run a model to evaluate the variability in pressure and temperature on solubility. Figure 1 shows that the mean solubility resulting from high pressure (Fpress=1) and high temperature (Ftemp=1) is sifnificantly greater than any other combination of pressure and temperature. Visually, this can be seen by the non-overlapping confidence intervals in the plot (Figure 1). To verify that the interaction of high pressure and high temperature has an effect on solubility greater than just temperature or pressure alone, we also create models of these situations and compare their p-values and percent variation explained. The first model is our interaction model. It says that 97.3% of the variation in solubility can be explained by the interaction of pressure and temperature (p<0.0001). The second model is temperature against solubility. It says that 33.25% of the variation in solubility can be explained by temperature alone (p=0.0114). The third model is pressure against solubility. It says that 30.23% of the variation in solubility can be explained by pressure alone (p=0.016). While all of these values are significant, it can be seen that pressure and temperature together have the greatest effect on solubility. 

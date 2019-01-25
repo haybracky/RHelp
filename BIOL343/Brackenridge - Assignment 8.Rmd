@@ -1,0 +1,106 @@
+---
+title: "Brackenridge - Assignment 8"
+author: "Hayley Brackenridge"
+date: '2018-03-18'
+output: word_document
+---
+
+#Preamble
+This is assignment 8 for BIOL343. This assignment involves manipulating the dataset ParasiteCod.csv to determine factors influencing fish weight. 
+
+```{r load packages & dataset}
+library(car)
+library(tidyverse)
+library(sjPlot)
+library(Hmisc)
+library(emmeans)
+library(ggplot2)
+library(grid)
+dat<- read.csv("ParasiteCod.csv")
+glimpse(dat)
+```
+
+```{r modify data}
+# filter out sex level 0 
+dat1<- dat%>% filter(Sex!="0")
+glimpse(dat1)
+# change sex & age to factors
+dat1$SexF<- as.factor(dat1$Sex)
+dat1$AgeF<- as.factor(dat1$Age)
+glimpse(dat1)
+```
+
+```{r Can length be used to predict weight?}
+# look for correlation btwn weight & length
+with(dat1, rcorr(Length, Weight))
+```
+^ weight and length are highly correlated (0.93) therefore we can use length as a predictor of weight
+
+```{r make models}
+# model 1: Length against sex and age (interacting)
+mod1<- lm(Length~SexF*AgeF, data=dat1)
+summary(mod1)
+## Age and sex not interacting therefore can take interaction out of model
+# model 2: Length against sex and age (independent)
+# model 3: Length against sex only
+mod2<- lm(Length~SexF+AgeF, data=dat1)
+mod3<- lm(Length~SexF, data=dat1)
+# are models 2 and 3 significantly different? 
+anova(mod2, mod3)
+## models are significantly different therefore age is an important factor
+# model 4: Length against age only
+mod4<- lm(Length~AgeF, data=dat1)
+# are models 2 and 4 significantly different?
+anova(mod2, mod4)
+## models are significantly different therefore sex is an important factor
+```
+^ age and sex are determining factors of length
+```{r test model meets assumptions}
+plot_model(mod2, type="diag")
+# Figure 1, 2, 3, 4
+qqnorm(residuals(mod2))
+```
+^ model seems to meet all assumptions
+
+    ## determine which sex is bigger by using the prediction function
+```{r}
+new<- data.frame(SexF="1", AgeF="1")
+predict(mod2, new, interval = "prediction")
+```
+```{r}
+new<- data.frame(SexF="1", AgeF="10")
+predict(mod2, new, interval = "prediction")
+```
+```{r}
+new<- data.frame(SexF="2", AgeF="1")
+predict(mod2, new, interval = "prediction")
+```
+```{r}
+new<- data.frame(SexF="2", AgeF="10")
+predict(mod2, new, interval = "prediction")
+```
+
+```{r Are males and females different?}
+Males=dat1%>%filter(Sex!=2)
+with(Males, rcorr(Weight,Length))
+Females=dat1%>%filter(Sex!=1)
+with(Females, rcorr(Weight, Length))
+#Both males and females have the same correlation between weight and height
+```
+
+```{r visualize}
+# Figure 5
+plot_model(mod2, type="pred", terms="AgeF")
+# Figure 6
+plot_model(mod2, type="pred", terms="SexF")
+# Figure 7
+em1 <- emmeans(mod2, "AgeF", by= "SexF")
+plot(em1, comparisons=TRUE)
+```
+
+# Assignment
+
+From this dataset, it is apparent that the heaviest fish will be the longest, oldest males. 
+
+To determine this, first we modify the data to get rid of level 0 for sex (not determined) and change sex and age to be factors. This is neccessary for data analysis. Next, we look to see if weight can be predicted by length. To do this, we use the function rcorr. This function tells us that weight and length are almost perfectly correlated (0.93). That means length is a very good predictor of weight. Next, we want to see if age and sex influence weight. To do this, we create a model of length predicted by sex interacting with age. There is no significant interaction between sex and age (p>0.2) therefore we can take the interaction out of the model. We make a new model of length against sex AND age. We also make a model of length against sex only. An analysis of variance between these two models shows there is a significant difference which suggests age is an important factor in the model. Then we make a new model of length against age only and compare it to the model with sex and age using ANOVA. These models are also significantly different, suggesting sex is an important factor in the model. Therefore, we will use the model using sex and age to predict length. Next we have to test the assumptions are met in the model. Using plot_model we see that the variance inflation factors are at a good level (Figure 1), the residuals are normally distributed (Figure 2), and there is adequate homoscedasticity(Figure 4). The model meets our assumptions and is a good predictor of length. Finally, we have to decide which sex is bigger, if any. We do this by using the predict function. We make new datasets using either sex (1=Male, 2=Female) at ages 1 and 10 (Figure 5, Figure 6). Comparing the values of these predictons, we see that older males are estimated to have the biggest weight but this difference is only slight. We can also look at the correlations between weight and length for males and females separately. Doing this, we can see that males and females have the same correlations between weight and length. This means that the difference in weight between males and females, although statistically significant, may not be that important We can therefore conclude that to efficiently capture the heaviest fish, you should catch the longest fish, whether they are male or female. 
+

@@ -1,0 +1,166 @@
+---
+title: "Brackenridge - Assignment 5"
+author: "Hayley Brackenridge"
+date: '2018-02-22'
+output: html_document
+---
+
+#Preamble
+
+This notebook contains assignment #5 for BIOL343 on correlations and regressions using the built in datasets mtcars and cars.
+
+##Part 1
+
+```{r load packages}
+library(GGally)
+library(Hmisc)
+library(ggplot2)
+library(gvlma)
+library(sjPlot)
+```
+
+```{r unadjusted matrix}
+Cor1<-rcorr(as.matrix(mtcars))
+Cor1
+## top matrix shows correlation coefficients
+## bottom matrix shows P-values for the correlations (top=uncorrected, bottom=corrected)
+```
+
+```{r adjusted matrix}
+Cor2<- p.adjust(Cor1$P,method="bonferroni")
+Cor2
+```
+
+```{r plot correlations}
+ggpairs(mtcars)
+```
+
+*Valid Correlations:* 
+
+  * mpg~disp
+  * mpg~hp
+  * mpg~drat
+  * mpg~wt
+  * mpg~qsec
+  * disp~hp
+  * disp~drat
+  * disp~wt
+  * disp~qsec
+  * hp~drat
+  * hp~wt
+  * hp~qsec
+  * drat~wt
+  * drat~qsec
+  * wt~qsec
+  
+*Not Valid Correlations:*
+
+  * mpg~cyl
+  * mpg~vs
+  * mpg~am
+  * mpg~gear
+  * mpg~carb
+  * cyl~disp
+  * cyl~hp
+  * cyl~drat
+  * cyl~wt
+  * cyl~qsec
+  * cyl~vs
+  * cyl~am
+  * cyl~gear
+  * cyl~carb
+  * disp~vs
+  * disp~am
+  * disp~gear
+  * disp~carb
+  * hp~vs
+  * hp~am
+  * hp~gear
+  * hp~carb
+  * drat~vs
+  * drat~am
+  * drat~gear
+  * drat~carb
+  * wt~vs
+  * wt~am
+  * wt~gear
+  * wt~carb
+  * qsec~vs
+  * qsec~am
+  * qsec~gear
+  * qsec~carb
+  * vs~am
+  * vs~gear
+  * vs~carb
+  * am~gear
+  * am~carb
+  * gear~carb
+  
+  ^ all have data distributions that are not close to linear 
+
+##Part 2
+
+```{r regression}
+str(cars)
+mod<-lm(dist~speed, data=cars)
+summary(mod)
+plot_model(mod, type="slope", show.data=TRUE)
+```
+
+```{r check assumptions}
+par(mfrow=c(2,2))
+mod1=lm(dist~speed,data=cars)
+plot(mod1)
+ggpairs(cars)
+gmodel=gvlma(mod1)
+summary(gmodel)
+```
+
+##^Plots
+
+  * #1 - Residuals vs. Fitted
+  
+  * #2 - Normal Q-Q Plot
+  
+  * #3 - Scale Location (Root of Standardized Normal Residuals)
+  
+  * #4 - Residuals vs. Leverage
+  
+  *Assumptions Satisfied:*
+    
+    Kurtosis
+    
+  *Assumptions Not Satisfied:*
+    
+    Linearity
+    
+    Normality
+    
+    Homoscedacity
+    
+Therefore, the regression model is not valid since it does not satisfy all of the assumptions. The data should be screened for outliers affecting the validity of assumptions. 
+    
+**Outliers:**
+
+  23, 35, 49
+  
+```{r remove outliers}
+mod2=lm(dist~speed,data=cars[-c(23,35,49),])
+summary(mod2)
+plot(mod2)
+gmodel2=gvlma(mod2)
+summary(gmodel2)
+```
+
+*^ Results*
+  
+  All assumptions are satisfied therefore the model is a good fit and the r value is valid
+
+```{r new model}
+ggplot(cars,aes(x=speed,y=dist))+geom_point(colour='#2980B9',size=4)+geom_smooth(method=lm,color='#2C3E50')
+plot_model(mod2,type="slope",show.data=TRUE)
+```
+  
+^ the new model, although very similar to the old one, is a better presentation of the data trends since it discludes the outliers and meets all regression assumptions. The old model was not good enough since the assumptions were not met and the regression coefficient could not be trusted. 
+
+

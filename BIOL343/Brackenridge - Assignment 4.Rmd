@@ -1,0 +1,55 @@
+---
+title: "Brackenridge - Assignment 4"
+author: "Hayley Brackenridge"
+date: '2018-02-03'
+output: html_document
+---
+#Preamble
+This notebook was created on February 3rd, 2018 for Assignment #4 of BIOL343. The notebook contains an exercise to determine sample size needed to achieve a given power (prospective power), and a simulated t-test.
+
+##Part 1
+
+Calculate the sample size needed to find a significant difference between two samples where I expect the difference between the means to be 4.7 and the pooled SD to be 16.0. I want to use a t-test to compare the samples and I want the power of this test to be high.
+
+```{r prospective power}
+x1<-power.t.test(delta=4.7, sd=16.0, power=0.8)
+x1
+```
+^ therefore a sample size of 183 is needed to achieve a high power (e.g. 0.8) with an observed difference of means of 4.7 and pooled SD of 16.0. 
+
+##Part 2
+
+The means of populations A and B are 51.3 and 56.0, respectively, the population sizes are A = 1500 and B = 2000, and the values in each population are normally distributed. Using that information, run simulations where you compare the means of populations A and B (using a t-test) with random samples of 50, 100, and 200 individuals from each population. How did the t-value and p-value change with sample size, and why? How do your results compare to the results of the power analysis described above? Did you need a sample as big as the power analysis suggested and why, or why not?
+
+```{r t-tests}
+A<- rnorm(1500, 51.3, 16)
+B<- rnorm(2000, 56.0, 16)
+sampleA1<- sample(A, 50)
+sampleA2<- sample(A, 100)
+sampleA3<- sample(A, 200)
+sampleB1<- sample(B, 50)
+sampleB2<- sample(B, 100)
+sampleB3<- sample(B, 200)
+test1<- t.test(sampleB1,sampleA1)
+test1
+test2<- t.test(sampleB2,sampleA2)
+test2
+test3<- t.test(sampleB3,sampleA3)
+test3
+```
+
+Summary:
+
+  * The t-value increased as sample size increased
+  
+  * The p-value decreased as sample size increased
+  
+  * The confidence interval became narrower as sample size increased
+    
+  * The estimated mean of differences became closer to 4.7
+  
+Explanation:
+
+P value decreases and t-value increases as sample size increases because larger samples are more representative of the actual population. When you use a small sample size, there is a greater chance that the sample you collect is a random subset of extreme values in the population. 
+
+Since the P-value generated from sampling 100 individuals was statistically supportive, that is an adequate sample size to use to find a mean of 4.7 with an SD of 16. 100 is close to 183 so this is not surprising. This may, however, just be the case in the one sample I generated and, if done several times, would not yield the same results. 
