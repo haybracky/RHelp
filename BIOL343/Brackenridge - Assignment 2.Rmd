@@ -1,0 +1,67 @@
+---
+title: "Assignment 2"
+author: "Hayley Brackenridge"
+date: '2018-01-16'
+output:
+  pdf_document: default
+  html_document: default
+  word_document: default
+---
+
+#Preamble
+
+This Notebook is a compilation of basic R functions formatted for future use in scientific paper publication. It includes R details, package loading, a description of variables, data file manipulation, summary tables, and confidence intervals. The Notebook uses the dataset published by Sandau et al. 2016 collected from 2002-2009 on plant ecosystem diversity and biomass production. This Notebook was created by Hayley Brackenridge on January 16th, 2018 for BIOL 343 Assignment #2 at Queen's University. 
+
+##R Details
+
+  * File creation date`r Sys.Date()`
+  * `r R.version.string`
+  * `ggplot2` package `r packageVersion("ggplot2")`
+  * `dplyr` package `r packageVersion("dplyr")`
+  * `Publish` package `r packageVersion("Publish")`
+
+##Load Packages
+```{r Packages}
+library(ggplot2)
+library(dplyr)
+library(Publish)
+```
+
+##The Data
+
+Data uploaded from DRYAD
+
+Variables:
+  * PlotID = unique plot identification
+  * Year = year data was collected (either 2008 or 2009)
+  * Field = field number data was collected from
+  * Treat = fencing treatment; categorical variable with categories: C = control; PE = predator exclusion; PHE = predator and herbivore exclusion
+  * SDiv = number of sown plant species 
+  * LeftS = number of sown species still present
+  * ColS = number of colonising species (predators & herbivores?)
+  * Tot_S = total species richness 
+  * W_m2 = total above ground biomass in g*m-2
+
+```{r my data}
+dat<-read.csv("BB_all_4_SimilMatrices_Dryad.csv")
+dat1<-dat[c(1:3, 5:10)]
+write.csv(dat1, file="dataset1.csv")
+dat2<- dat1%>% mutate(log10(W_m2), Ts= Tot_S, Bs= W_m2, 10*ColS)
+dat2
+write.csv(dat2, file="dataset2.csv")
+dat3<-subset(dat2, Treat=='8mm')
+dat3
+write.csv(dat3, file="dataset3.csv")
+```
+
+```{r summary}
+sum<-dat3%>%
+  summarise(n=n(),mean(Bs),median(Bs),min(Bs),max(Bs),sd(Bs))
+sum
+CI<-ci.mean(Bs~Year, data=dat3)
+CI
+plot(CI)
+```
+##Interpretation
+
+The above graph shows the 95% confidence interval for total above ground biomass in the 8mm fence treatment only over both 2008 and 2009. This suggests that there is a 95% chance the true mean of total above ground biomass for the 8mm fence treatment lies in this range. 
